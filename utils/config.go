@@ -18,7 +18,8 @@ import (
 func InitViper(runEnv string) {
 	if runEnv == "local" {
 		viper.AddConfigPath("configs")
-		viper.SetConfigName("config")
+		// viper.SetConfigName("config")
+		viper.SetConfigName("config.local")
 
 		if err := viper.ReadInConfig(); err != nil {
 			log.Fatalf("ReadInConfig error: cannot read in viper config:%s", err)

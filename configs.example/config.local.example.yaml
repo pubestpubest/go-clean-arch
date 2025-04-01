@@ -1,0 +1,12 @@
+http:
+  port: ":8080"
+
+postgres:
+  host: "localhost"
+  user: "admin"
+  password: "admin"
+  dbname: "db"
+  port: "5432"
+
+jwt:
+  secret: "dijwlaksjd1o8237o*@98y1oi3h"
