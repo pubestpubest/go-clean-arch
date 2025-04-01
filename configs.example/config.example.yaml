@@ -1,0 +1,12 @@
+http:
+  port:
+
+postgres:
+  host:
+  user:
+  password:
+  dbname:
+  port:
+
+jwt:
+  secret:
