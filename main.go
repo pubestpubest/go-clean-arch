@@ -56,6 +56,9 @@ func serveGracefulShutdown(e *echo.Echo) {
 func migrateDB() {
 	DB.AutoMigrate(
 		&entity.User{},
+		&entity.Order{},
+		&entity.Product{},
+		&entity.Shop{},
 	)
 }
 
