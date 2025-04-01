@@ -1,0 +1,37 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "asia-southeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}",
+        ".",
+      ]
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "asia-southeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}",
+      ]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "${_SERVICE_NAME}",
+        "--image",
+        "asia-southeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}",
+        "--region",
+        "asia-southeast1",
+        "--platform",
+        "managed",
+        "--allow-unauthenticated",
+      ]
+
+substitutions:
+  _PROJECT_ID: gkh-outsource
+  _REPO_NAME: ohm-lab
+  _SERVICE_NAME: ohm-lab
