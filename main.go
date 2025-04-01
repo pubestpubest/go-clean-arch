@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"order-management/entity"
 	userDelivery "order-management/features/user/delivery"
 	userRepository "order-management/features/user/repository"
 	userUsecase "order-management/features/user/usecase"
@@ -54,7 +55,7 @@ func serveGracefulShutdown(e *echo.Echo) {
 
 func migrateDB() {
 	DB.AutoMigrate(
-	// &User{},
+		&entity.User{},
 	)
 }
 
@@ -125,7 +126,7 @@ func connectDB() error {
 	var err error
 	DB, err = gorm.Open(postgres.Open(connectionString), &gorm.Config{})
 
-	// migrateDB()
+	migrateDB()
 
 	return err
 }
