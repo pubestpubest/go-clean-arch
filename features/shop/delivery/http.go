@@ -41,7 +41,7 @@ func (h *Handler) CreateProduct(c echo.Context) error {
 }
 
 func (h *Handler) GetAllShops(c echo.Context) error {
-	shops, err := h.usecase.GetAllShops()
+	shops, err := h.usecase.GetAllShopsWithProducts()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

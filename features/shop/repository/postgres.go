@@ -24,10 +24,16 @@ func (r *shopRepository) CreateShop(shop entity.Shop) error {
 	return r.db.Create(&shop).Error
 }
 
-func (r *shopRepository) GetAllShops() ([]entity.Shop, error) {
-	var shops []entity.Shop
-	if err := r.db.Preload("Products").Find(&shops, 1).Error; err != nil {
+func (r *shopRepository) GetAllShops() (shops []entity.Shop, err error) {
+	if err := r.db.Find(&shops).Error; err != nil {
 		return nil, err
 	}
 	return shops, nil
+}
+
+func (r *shopRepository) GetProductsByShopID(shopID uint32) (products []entity.Product, err error) {
+	if err := r.db.Where("shop_id = ?", shopID).Find(&products).Error; err != nil {
+		return nil, err
+	}
+	return products, nil
 }

@@ -1,8 +1,10 @@
 package usecase
 
 import (
+	"fmt"
 	"order-management/domain"
 	"order-management/entity"
+	"order-management/response"
 )
 
 type shopUsecase struct {
@@ -21,6 +23,51 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 	return u.repo.CreateShop(shop)
 }
 
-func (u *shopUsecase) GetAllShops() ([]entity.Shop, error) {
-	return u.repo.GetAllShops()
+// Too big O(n^2)
+func (u *shopUsecase) GetAllShopsWithProducts() ([]response.Shop, error) {
+	shops, err := u.repo.GetAllShops()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(shops)
+	shopsResponse := []response.Shop{}
+	for _, shop := range shops {
+		products, err := u.repo.GetProductsByShopID(shop.ID)
+		if err != nil {
+			return nil, err
+		}
+		productsResponse := []response.Product{}
+		for _, product := range products {
+			productsResponse = append(productsResponse, response.Product{
+				ID:          product.ID,
+				Name:        product.Name,
+				Description: product.Description,
+				Price:       product.Price,
+			})
+		}
+		shopResponse := response.Shop{
+			ID:          shop.ID,
+			Name:        shop.Name,
+			Description: shop.Description,
+			Products:    productsResponse,
+		}
+		shopsResponse = append(shopsResponse, shopResponse)
+	}
+	return shopsResponse, nil
+}
+
+func (u *shopUsecase) GetAllShops() ([]response.Shop, error) {
+	shops, err := u.repo.GetAllShops()
+	if err != nil {
+		return nil, err
+	}
+	shopsResponse := []response.Shop{}
+	for _, shop := range shops {
+		shopsResponse = append(shopsResponse, response.Shop{
+			ID:          shop.ID,
+			Name:        shop.Name,
+			Description: shop.Description,
+		})
+	}
+	return shopsResponse, nil
 }
