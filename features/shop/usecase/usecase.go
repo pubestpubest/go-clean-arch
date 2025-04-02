@@ -31,13 +31,13 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 }
 
 // Too big O(n^2)
-func (u *shopUsecase) GetAllShopsWithProducts() ([]response.Shop, error) {
+func (u *shopUsecase) GetAllShopsWithProducts() ([]response.ShopWithProducts, error) {
 	shops, err := u.repo.GetAllShops()
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println(shops)
-	shopsResponse := []response.Shop{}
+	shopsResponse := []response.ShopWithProducts{}
 	for _, shop := range shops {
 		products, err := u.repo.GetProductsByShopID(shop.ID)
 		if err != nil {
@@ -52,7 +52,7 @@ func (u *shopUsecase) GetAllShopsWithProducts() ([]response.Shop, error) {
 				Price:       product.Price,
 			})
 		}
-		shopResponse := response.Shop{
+		shopResponse := response.ShopWithProducts{
 			ID:          shop.ID,
 			Name:        shop.Name,
 			Description: shop.Description,
@@ -103,15 +103,15 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]response.Product, error)
 }
 
 func (u *shopUsecase) BelongsToShop(productID uint32, claims *response.Shop) bool {
-	for _, product := range claims.Products {
-		if product.ID == productID {
-			return true
-		}
+	product, err := u.repo.GetProductByID(productID)
+	if err != nil {
+		return false
 	}
-	return false
+	return product.ShopID == claims.ID
 }
 
 func (u *shopUsecase) UpdateProduct(productID uint32, newProduct *entity.Product) error {
-	//Check if the product belongs to the shop
+	newProduct.ID = productID
+	fmt.Println("new product ", newProduct)
 	return u.repo.UpdateProduct(productID, newProduct)
 }

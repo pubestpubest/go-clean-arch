@@ -48,3 +48,10 @@ func (r *shopRepository) GetShopByName(name string) (shop entity.Shop, err error
 func (r *shopRepository) UpdateProduct(productID uint32, newProduct *entity.Product) error {
 	return r.db.Model(&entity.Product{}).Where("id = ?", productID).Updates(newProduct).Error
 }
+
+func (r *shopRepository) GetProductByID(productID uint32) (product entity.Product, err error) {
+	if err := r.db.First(&product, productID).Error; err != nil {
+		return entity.Product{}, err
+	}
+	return product, nil
+}
