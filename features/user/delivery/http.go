@@ -22,6 +22,7 @@ func NewHandler(e *echo.Group, u domain.UserUsecase) *Handler {
 	e.POST("/users/login", h.Login)
 	e.GET("/users/:id", h.GetUserByID)
 	e.PUT("/users/:id", h.UpdateUser)
+	e.GET("/users/me", h.ReadToken)
 
 	return &h
 }
@@ -104,4 +105,27 @@ func (h *Handler) Login(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 	return c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) ReadToken(c echo.Context) error {
+	cookie, err := c.Cookie("token")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, entity.ResponseError{Error: "Unauthorized"})
+	}
+	token, err := jwt.ParseWithClaims(cookie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(viper.GetString("jwt.secret")), nil
+	})
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, entity.ResponseError{Error: "Unauthorized"})
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	address, err := h.usecase.GetAddressByUserID(uint32(claims["id"].(float64)))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"address": address,
+		"email":   claims["email"],
+		"id":      claims["id"],
+	})
 }

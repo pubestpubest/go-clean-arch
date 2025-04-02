@@ -48,3 +48,6 @@ func (u *userUsecase) Login(email string, password string) (entity.User, error) 
 	}
 	return user, nil
 }
+func (u *userUsecase) GetAddressByUserID(userID uint32) (string, error) {
+	return u.repo.GetAddressByUserID(userID)
+}

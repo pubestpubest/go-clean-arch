@@ -8,6 +8,7 @@ type UserUsecase interface {
 	UpdateUser(user entity.User) error
 	GetUserByEmail(email string) (entity.User, error)
 	Login(email string, password string) (entity.User, error)
+	GetAddressByUserID(userID uint32) (string, error)
 }
 
 type UserRepository interface {
@@ -15,4 +16,5 @@ type UserRepository interface {
 	GetUserByID(id uint32) (entity.User, error)
 	UpdateUser(user entity.User) error
 	GetUserByEmail(email string) (entity.User, error)
+	GetAddressByUserID(userID uint32) (string, error)
 }

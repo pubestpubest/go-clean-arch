@@ -37,3 +37,7 @@ func (r *userRepository) UpdateUser(user entity.User) error {
 func (r *userRepository) DeleteUser(user entity.User) error {
 	return r.db.Delete(&user).Error
 }
+
+func (r *userRepository) GetAddressByUserID(userID uint32) (address string, err error) {
+	return address, r.db.Model(&entity.User{}).Where("id = ?", userID).Select("address").Scan(&address).Error
+}
