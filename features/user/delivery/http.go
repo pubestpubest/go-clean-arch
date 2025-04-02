@@ -22,6 +22,10 @@ func NewHandler(e *echo.Group, u domain.UserUsecase) *Handler {
 
 func (h *Handler) CreateUser(c echo.Context) error {
 	req := entity.User{}
+	err := c.Bind(&req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+	}
 
 	if err := h.usecase.CreateUser(req); err != nil {
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
