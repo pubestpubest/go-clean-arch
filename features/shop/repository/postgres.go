@@ -44,3 +44,7 @@ func (r *shopRepository) GetShopByName(name string) (shop entity.Shop, err error
 	}
 	return shop, nil
 }
+
+func (r *shopRepository) UpdateProduct(productID uint32, newProduct *entity.Product) error {
+	return r.db.Model(&entity.Product{}).Where("id = ?", productID).Updates(newProduct).Error
+}

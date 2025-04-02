@@ -101,3 +101,17 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]response.Product, error)
 	}
 	return productsResponse, nil
 }
+
+func (u *shopUsecase) BelongsToShop(productID uint32, claims *response.Shop) bool {
+	for _, product := range claims.Products {
+		if product.ID == productID {
+			return true
+		}
+	}
+	return false
+}
+
+func (u *shopUsecase) UpdateProduct(productID uint32, newProduct *entity.Product) error {
+	//Check if the product belongs to the shop
+	return u.repo.UpdateProduct(productID, newProduct)
+}
