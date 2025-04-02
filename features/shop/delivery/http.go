@@ -8,7 +8,7 @@ import (
 	"order-management/response"
 	"strconv"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
