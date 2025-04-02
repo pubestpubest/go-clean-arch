@@ -6,7 +6,9 @@ import (
 	"order-management/entity"
 	"strconv"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type Handler struct {
@@ -16,7 +18,8 @@ type Handler struct {
 func NewHandler(e *echo.Group, u domain.UserUsecase) *Handler {
 	h := Handler{usecase: u}
 
-	e.POST("/users", h.CreateUser)
+	e.POST("/users/register", h.CreateUser)
+	e.POST("/users/login", h.Login)
 	e.GET("/users/:id", h.GetUserByID)
 	e.PUT("/users/:id", h.UpdateUser)
 
@@ -28,6 +31,9 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	err := c.Bind(&req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+	}
+	if req.Password == "" {
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: "Password is required"})
 	}
 
 	if err := h.usecase.CreateUser(req); err != nil {
@@ -69,5 +75,33 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	if err := h.usecase.UpdateUser(user); err != nil {
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
 	}
+	return c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) Login(c echo.Context) error {
+	req := entity.User{}
+	err := c.Bind(&req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+	}
+
+	user, err := h.usecase.Login(req.Email, req.Password)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": user.Email,
+		"id":    user.ID,
+	})
+	t, err := token.SignedString([]byte(viper.GetString("jwt.secret")))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+	}
+	cookie := &http.Cookie{
+		Name:  "token",
+		Value: t,
+		Path:  "/",
+	}
+	c.SetCookie(cookie)
 	return c.JSON(http.StatusOK, user)
 }
