@@ -78,12 +78,35 @@ func (u *shopUsecase) GetAllShops() ([]response.Shop, error) {
 	}
 	return shopsResponse, nil
 }
-func (u *shopUsecase) GetShopByName(name string) (entity.Shop, error) {
-	return u.repo.GetShopByName(name)
+func (u *shopUsecase) GetShopByName(name string) (response.ShopWithProducts, error) {
+	shop, err := u.repo.GetShopByName(name)
+	if err != nil {
+		return response.ShopWithProducts{}, err
+	}
+	products, err := u.repo.GetProductsByShopID(shop.ID)
+	if err != nil {
+		return response.ShopWithProducts{}, err
+	}
+	productsResponse := []response.Product{}
+	for _, product := range products {
+		productsResponse = append(productsResponse, response.Product{
+			ID:          product.ID,
+			Name:        product.Name,
+			Description: product.Description,
+			Price:       product.Price,
+		})
+	}
+	shopResponse := response.ShopWithProducts{
+		ID:          shop.ID,
+		Name:        shop.Name,
+		Description: shop.Description,
+		Products:    productsResponse,
+	}
+	return shopResponse, nil
 }
 
 func (u *shopUsecase) Login(name string, password string) (entity.Shop, error) {
-	return u.repo.GetShopByName(name)
+	return u.repo.GetShopByNameWithPassword(name)
 }
 func (u *shopUsecase) GetProductsByShopID(id uint32) ([]response.Product, error) {
 	products, err := u.repo.GetProductsByShopID(id)

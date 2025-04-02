@@ -21,15 +21,14 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 	h := Handler{usecase: u}
 
 	// Need JWT
-	e.POST("/products", h.CreateProduct)               // Only shop owner can create products
-	e.PUT("/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
-	e.DELETE("/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
-	e.GET("/shops/me", h.ReadToken)                    // Get current shop profile from JWT
-	e.POST("/shops/logout", h.Logout)                  // Logout requires JWT
-	e.GET("/shops/profile", h.GetShopProfile)          // Get detailed profile requires JWT
+	e.POST("/shops/products", h.CreateProduct)               // Only shop owner can create products
+	e.PUT("/shops/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
+	e.DELETE("/shops/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
+	e.GET("/shops/me", h.ReadToken)                          // Get current shop profile from JWT
+	e.POST("/shops/logout", h.Logout)                        // Logout requires JWT
+	e.GET("/shops/profile", h.GetShopProfile)                // Get detailed profile requires JWT
 
 	// Public endpoints
-	e.GET("/:shop_id/products", h.GetProducts)               // Anyone can view products
 	e.GET("/shops", h.GetAllShops)                           // Anyone can view shops
 	e.POST("/shops/register", h.CreateShop)                  // Public registration
 	e.POST("/shops/login", h.Login)                          // Public login
@@ -103,18 +102,6 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
-}
-
-func (h *Handler) GetProducts(c echo.Context) error {
-	shopID, err := strconv.ParseUint(c.Param("shop_id"), 10, 32)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-	products, err := h.usecase.GetProductsByShopID(uint32(shopID))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	return c.JSON(http.StatusOK, products)
 }
 
 func (h *Handler) Logout(c echo.Context) error {
