@@ -18,7 +18,7 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 
 	e.POST("/:shop_id/products", h.CreateProduct)
 	e.GET("/shops", h.GetAllShops)
-	e.POST("/shops", h.CreateShop)
+	e.POST("/shops/register", h.CreateShop)
 	return &h
 }
 
@@ -51,11 +51,12 @@ func (h *Handler) GetAllShops(c echo.Context) error {
 
 func (h *Handler) CreateShop(c echo.Context) error {
 	req := entity.Shop{}
-
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-
+	if req.Password == "" {
+		return c.JSON(http.StatusBadRequest, "password is required")
+	}
 	if err := h.usecase.CreateShop(req); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

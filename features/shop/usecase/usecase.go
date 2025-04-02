@@ -5,6 +5,8 @@ import (
 	"order-management/domain"
 	"order-management/entity"
 	"order-management/response"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type shopUsecase struct {
@@ -20,6 +22,11 @@ func (u *shopUsecase) CreateProduct(product entity.Product, shopID uint32) error
 }
 
 func (u *shopUsecase) CreateShop(shop entity.Shop) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(shop.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	shop.Password = string(hashedPassword)
 	return u.repo.CreateShop(shop)
 }
 
