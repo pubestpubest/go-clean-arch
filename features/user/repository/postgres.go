@@ -33,6 +33,7 @@ func (r *userRepository) UpdateUser(user entity.User) error {
 	return r.db.Save(&user).Error
 }
 
+// Didn't implement soft-delete user
 func (r *userRepository) DeleteUser(user entity.User) error {
 	return r.db.Delete(&user).Error
 }
