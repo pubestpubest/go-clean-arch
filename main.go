@@ -7,6 +7,9 @@ import (
 	"net/http"
 
 	"order-management/entity"
+	shopDelivery "order-management/features/shop/delivery"
+	shopRepository "order-management/features/shop/repository"
+	shopUsecase "order-management/features/shop/usecase"
 	userDelivery "order-management/features/user/delivery"
 	userRepository "order-management/features/user/repository"
 	userUsecase "order-management/features/user/usecase"
@@ -112,6 +115,12 @@ func main() {
 	userDelivery.NewHandler(v1,
 		userUsecase.NewUserUsecase(
 			userRepository.NewUserRepository(DB),
+		),
+	)
+
+	shopDelivery.NewHandler(v1,
+		shopUsecase.NewShopUsecase(
+			shopRepository.NewShopRepository(DB),
 		),
 	)
 
