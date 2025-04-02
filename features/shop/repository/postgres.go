@@ -55,3 +55,7 @@ func (r *shopRepository) GetProductByID(productID uint32) (product entity.Produc
 	}
 	return product, nil
 }
+
+func (r *shopRepository) DeleteProduct(productID uint32) error {
+	return r.db.Where("id = ?", productID).Delete(&entity.Product{}).Error
+}

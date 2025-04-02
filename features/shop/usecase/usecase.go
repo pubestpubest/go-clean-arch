@@ -115,3 +115,6 @@ func (u *shopUsecase) UpdateProduct(productID uint32, newProduct *entity.Product
 	fmt.Println("new product ", newProduct)
 	return u.repo.UpdateProduct(productID, newProduct)
 }
+func (u *shopUsecase) DeleteProduct(productID uint32) error {
+	return u.repo.DeleteProduct(productID)
+}

@@ -15,6 +15,7 @@ type ShopUsecase interface {
 	GetProductsByShopID(id uint32) ([]response.Product, error)
 	BelongsToShop(productID uint32, claims *response.Shop) bool
 	UpdateProduct(productID uint32, newProduct *entity.Product) error
+	DeleteProduct(productID uint32) error
 }
 
 type ShopRepository interface {
@@ -25,4 +26,5 @@ type ShopRepository interface {
 	GetShopByName(name string) (entity.Shop, error)
 	UpdateProduct(productID uint32, newProduct *entity.Product) error
 	GetProductByID(productID uint32) (entity.Product, error)
+	DeleteProduct(productID uint32) error
 }

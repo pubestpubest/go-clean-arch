@@ -20,16 +20,62 @@ type Handler struct {
 func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 	h := Handler{usecase: u}
 
-	e.POST("/:shop_id/products", h.CreateProduct)
-	e.GET("/:shop_id/products", h.GetProducts)
-	e.PUT("/products/:product_id", h.UpdateProduct)
-	// e.DELETE("/products/:product_id", h.DeleteProduct)
-	e.GET("/shops", h.GetAllShops)
-	e.POST("/shops/register", h.CreateShop)
-	e.POST("/shops/login", h.Login)
-	e.GET("/shops/me", h.ReadToken)
-	e.POST("/shops/logout", h.Logout)
+	// Need JWT
+	e.POST("/products", h.CreateProduct)               // Only shop owner can create products
+	e.PUT("/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
+	e.DELETE("/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
+	e.GET("/shops/me", h.ReadToken)                    // Get current shop profile from JWT
+	e.POST("/shops/logout", h.Logout)                  // Logout requires JWT
+	e.GET("/shops/profile", h.GetShopProfile)          // Get detailed profile requires JWT
+
+	// Public endpoints
+	e.GET("/:shop_id/products", h.GetProducts)               // Anyone can view products
+	e.GET("/shops", h.GetAllShops)                           // Anyone can view shops
+	e.POST("/shops/register", h.CreateShop)                  // Public registration
+	e.POST("/shops/login", h.Login)                          // Public login
+	e.GET("/shops/:shop_id/products", h.GetProductsByShopID) // Anyone can view products
 	return &h
+}
+
+func (h *Handler) GetShopProfile(c echo.Context) error {
+	claims, err := readToken(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, err.Error())
+	}
+	shop, err := h.usecase.GetShopByName(claims.Name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, shop)
+}
+func (h *Handler) GetProductsByShopID(c echo.Context) error {
+	shopID, err := strconv.ParseUint(c.Param("shop_id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	products, err := h.usecase.GetProductsByShopID(uint32(shopID))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, products)
+}
+
+func (h *Handler) DeleteProduct(c echo.Context) error {
+	productID, err := strconv.ParseUint(c.Param("product_id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	claims, err := readToken(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, err.Error())
+	}
+	if !h.usecase.BelongsToShop(uint32(productID), claims) {
+		return c.JSON(http.StatusUnauthorized, "unauthorized")
+	}
+	if err := h.usecase.DeleteProduct(uint32(productID)); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) UpdateProduct(c echo.Context) error {
@@ -83,17 +129,17 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 func (h *Handler) CreateProduct(c echo.Context) error {
-	req := entity.Product{}
-	shopID, err := strconv.ParseUint(c.Param("shop_id"), 10, 32)
+	claims, err := readToken(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusUnauthorized, err.Error())
 	}
 
+	req := entity.Product{}
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	if err := h.usecase.CreateProduct(req, uint32(shopID)); err != nil {
+	if err := h.usecase.CreateProduct(req, claims.ID); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
