@@ -183,22 +183,22 @@ func readToken(c echo.Context) (data *response.Shop, err error) {
 	if err != nil {
 		return nil, err
 	}
-	token, err := jwt.ParseWithClaims(cookie.Value, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(cookie.Value, &response.Shop{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(viper.GetString("jwt.secret")), nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	claims, ok := token.Claims.(*jwt.MapClaims)
+	claims, ok := token.Claims.(*response.Shop)
 	if !ok || !token.Valid {
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
 	fmt.Println(claims)
 	data = &response.Shop{
-		ID:          uint32((*claims)["id"].(float64)),
-		Name:        (*claims)["name"].(string),
-		Description: (*claims)["description"].(string),
-		Products:    (*claims)["products"].([]response.Product),
+		ID:          claims.ID,
+		Name:        claims.Name,
+		Description: claims.Description,
+		Products:    claims.Products,
 	}
 	fmt.Println(data)
 	return data, nil
