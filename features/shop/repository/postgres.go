@@ -37,3 +37,10 @@ func (r *shopRepository) GetProductsByShopID(shopID uint32) (products []entity.P
 	}
 	return products, nil
 }
+
+func (r *shopRepository) GetShopByName(name string) (shop entity.Shop, err error) {
+	if err := r.db.Where("name = ?", name).First(&shop).Error; err != nil {
+		return entity.Shop{}, err
+	}
+	return shop, nil
+}
