@@ -7,6 +7,8 @@ import (
 	"order-management/response"
 	"strconv"
 
+	"order-management/middleware"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -20,26 +22,30 @@ type Handler struct {
 func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 	h := Handler{usecase: u}
 
-	// Need JWT
-	e.POST("/shops/products", h.CreateProduct)               // Only shop owner can create products
-	e.PUT("/shops/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
-	e.DELETE("/shops/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
-	e.GET("/shops/me", h.ReadToken)                          // Get current shop profile from JWT
-	e.POST("/shops/logout", h.Logout)                        // Logout requires JWT
-	e.GET("/shops/profile", h.GetShopProfile)                // Get detailed profile requires JWT
+	// Public group - no authentication required
+	publicGroup := e.Group("")
+	publicGroup.GET("/shops", h.GetAllShops)                           // Anyone can view shops
+	publicGroup.POST("/shops/register", h.CreateShop)                  // Public registration
+	publicGroup.POST("/shops/login", h.Login)                          // Public login
+	publicGroup.GET("/shops/:shop_id/products", h.GetProductsByShopID) // Anyone can view products
 
-	// Public endpoints
-	e.GET("/shops", h.GetAllShops)                           // Anyone can view shops
-	e.POST("/shops/register", h.CreateShop)                  // Public registration
-	e.POST("/shops/login", h.Login)                          // Public login
-	e.GET("/shops/:shop_id/products", h.GetProductsByShopID) // Anyone can view products
+	// Authenticated group - requires JWT
+	authGroup := e.Group("")
+	authGroup.Use(middleware.ShopAuth())
+	authGroup.POST("/shops/products", h.CreateProduct)               // Only shop owner can create products
+	authGroup.PUT("/shops/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
+	authGroup.DELETE("/shops/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
+	authGroup.GET("/shops/me", h.ReadToken)                          // Get current shop profile from JWT
+	authGroup.POST("/shops/logout", h.Logout)                        // Logout requires JWT
+	authGroup.GET("/shops/profile", h.GetShopProfile)                // Get detailed profile requires JWT
+
 	return &h
 }
 
 func (h *Handler) GetShopProfile(c echo.Context) error {
-	claims, err := readToken(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+	claims, ok := c.Get("shop").(*response.Shop)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
 	shop, err := h.usecase.GetShopByName(claims.Name)
 	if err != nil {
@@ -47,6 +53,7 @@ func (h *Handler) GetShopProfile(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, shop)
 }
+
 func (h *Handler) GetProductsByShopID(c echo.Context) error {
 	shopID, err := strconv.ParseUint(c.Param("shop_id"), 10, 32)
 	if err != nil {
@@ -64,9 +71,9 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	claims, err := readToken(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+	claims, ok := c.Get("shop").(*response.Shop)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
 	if !h.usecase.BelongsToShop(uint32(productID), claims) {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
@@ -83,10 +90,10 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	//Read token
-	claims, err := readToken(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+	//Get shop from JWT
+	claims, ok := c.Get("shop").(*response.Shop)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
 	//Bind
 	req := entity.Product{}
@@ -116,20 +123,17 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 func (h *Handler) CreateProduct(c echo.Context) error {
-	claims, err := readToken(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+	claims, ok := c.Get("shop").(*response.Shop)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
-
 	req := entity.Product{}
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-
 	if err := h.usecase.CreateProduct(req, claims.ID); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
 	return c.NoContent(http.StatusOK)
 }
 
@@ -203,32 +207,9 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) ReadToken(c echo.Context) error {
-	claims, err := readToken(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+	claims, ok := c.Get("shop").(*response.Shop)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
 	return c.JSON(http.StatusOK, claims)
-}
-
-func readToken(c echo.Context) (data *response.Shop, err error) {
-	cookie, err := c.Cookie("token")
-	if err != nil {
-		return nil, err
-	}
-	token, err := jwt.ParseWithClaims(cookie.Value, &response.Shop{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(viper.GetString("jwt.secret")), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	claims, ok := token.Claims.(*response.Shop)
-	if !ok || !token.Valid {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
-	}
-	data = &response.Shop{
-		ID:          claims.ID,
-		Name:        claims.Name,
-		Description: claims.Description,
-	}
-	return data, nil
 }
