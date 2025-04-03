@@ -12,9 +12,8 @@ type ShopUsecase interface {
 	GetShopByName(name string) (entity.ShopWithProducts, error)
 	Login(name string, password string) (entity.Shop, error)
 	GetProductsByShopID(id uint32) ([]entity.Product, error)
-	BelongsToShop(productID uint32, claims *entity.ShopResponse) bool
-	UpdateProduct(productID uint32, newProduct *entity.Product) error
-	DeleteProduct(productID uint32) error
+	UpdateProduct(req *entity.ProductManagementRequest, product *entity.Product) error
+	DeleteProduct(req *entity.ProductManagementRequest) error
 }
 
 type ShopRepository interface {
@@ -23,8 +22,8 @@ type ShopRepository interface {
 	GetAllShops() ([]entity.Shop, error)
 	GetProductsByShopID(shopID uint32) ([]entity.Product, error)
 	GetShopByName(name string) (entity.ShopResponse, error)
-	UpdateProduct(productID uint32, newProduct *entity.Product) error
+	UpdateProduct(req *entity.ProductManagementRequest, product *entity.Product) error
 	GetProductByID(productID uint32) (entity.Product, error)
-	DeleteProduct(productID uint32) error
+	DeleteProduct(req *entity.ProductManagementRequest) error
 	GetShopByNameWithPassword(name string) (entity.Shop, error)
 }

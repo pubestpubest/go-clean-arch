@@ -58,8 +58,8 @@ func (r *shopRepository) GetShopByNameWithPassword(name string) (shop entity.Sho
 	return shop, nil
 }
 
-func (r *shopRepository) UpdateProduct(productID uint32, newProduct *entity.Product) error {
-	return r.db.Model(&entity.Product{}).Where("id = ?", productID).Updates(newProduct).Error
+func (r *shopRepository) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
+	return r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Updates(newProduct).Error
 }
 
 func (r *shopRepository) GetProductByID(productID uint32) (product entity.Product, err error) {
@@ -69,6 +69,6 @@ func (r *shopRepository) GetProductByID(productID uint32) (product entity.Produc
 	return product, nil
 }
 
-func (r *shopRepository) DeleteProduct(productID uint32) error {
-	return r.db.Where("id = ?", productID).Delete(&entity.Product{}).Error
+func (r *shopRepository) DeleteProduct(req *entity.ProductManagementRequest) error {
+	return r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Delete(&entity.Product{}).Error
 }

@@ -70,14 +70,15 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	claims, ok := c.Get("shop").(*entity.ShopResponse)
+	shop, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
-	if !h.usecase.BelongsToShop(uint32(productID), claims) {
-		return c.JSON(http.StatusUnauthorized, "unauthorized")
+	req := entity.ProductManagementRequest{
+		ShopResponse: *shop,
+		ProductID:    uint32(productID),
 	}
-	if err := h.usecase.DeleteProduct(uint32(productID)); err != nil {
+	if err := h.usecase.DeleteProduct(&req); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
@@ -95,16 +96,16 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
 	//Bind
-	req := entity.Product{}
-	if err := c.Bind(&req); err != nil {
+	product := entity.Product{}
+	if err := c.Bind(&product); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	//Check if the product belongs to the shop
-	if !h.usecase.BelongsToShop(uint32(productID), shop) {
-		return c.JSON(http.StatusUnauthorized, "unauthorized")
+	req := entity.ProductManagementRequest{
+		ShopResponse: *shop,
+		ProductID:    uint32(productID),
 	}
 	//Update product
-	if err := h.usecase.UpdateProduct(uint32(productID), &req); err != nil {
+	if err := h.usecase.UpdateProduct(&req, &product); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)

@@ -132,11 +132,11 @@ func (u *shopUsecase) BelongsToShop(productID uint32, claims *entity.ShopRespons
 	return product.ShopID == claims.ID
 }
 
-func (u *shopUsecase) UpdateProduct(productID uint32, newProduct *entity.Product) error {
-	newProduct.ID = productID
+func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
+	newProduct.ID = req.ProductID
 	fmt.Println("new product ", newProduct)
-	return u.repo.UpdateProduct(productID, newProduct)
+	return u.repo.UpdateProduct(req, newProduct)
 }
-func (u *shopUsecase) DeleteProduct(productID uint32) error {
-	return u.repo.DeleteProduct(productID)
+func (u *shopUsecase) DeleteProduct(req *entity.ProductManagementRequest) error {
+	return u.repo.DeleteProduct(req)
 }
