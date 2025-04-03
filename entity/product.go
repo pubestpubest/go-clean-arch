@@ -9,3 +9,10 @@ type Product struct {
 	Shop        Shop    `gorm:"foreignKey:ShopID"`
 	Orders      []Order `gorm:"many2many:order_products;"`
 }
+
+type ProductResponse struct {
+	ID          uint32 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Price       uint32 `json:"price"`
+}

@@ -3,7 +3,6 @@ package repository
 import (
 	"order-management/domain"
 	"order-management/entity"
-	"order-management/response"
 
 	"gorm.io/gorm"
 )
@@ -39,12 +38,12 @@ func (r *shopRepository) GetProductsByShopID(shopID uint32) (products []entity.P
 	return products, nil
 }
 
-func (r *shopRepository) GetShopByName(name string) (shop response.Shop, err error) {
+func (r *shopRepository) GetShopByName(name string) (shop entity.ShopResponse, err error) {
 	var entityShop entity.Shop
 	if err := r.db.Where("name = ?", name).First(&entityShop).Error; err != nil {
-		return response.Shop{}, err
+		return entity.ShopResponse{}, err
 	}
-	shop = response.Shop{
+	shop = entity.ShopResponse{
 		ID:          entityShop.ID,
 		Name:        entityShop.Name,
 		Description: entityShop.Description,

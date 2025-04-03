@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"order-management/domain"
 	"order-management/entity"
-	"order-management/response"
 	"strconv"
 
 	"order-management/middleware"
@@ -43,7 +42,7 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 }
 
 func (h *Handler) GetShopProfile(c echo.Context) error {
-	claims, ok := c.Get("shop").(*response.Shop)
+	claims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
@@ -71,7 +70,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	claims, ok := c.Get("shop").(*response.Shop)
+	claims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
@@ -91,7 +90,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	//Get shop from JWT
-	claims, ok := c.Get("shop").(*response.Shop)
+	shop, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
@@ -101,7 +100,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	//Check if the product belongs to the shop
-	if !h.usecase.BelongsToShop(uint32(productID), claims) {
+	if !h.usecase.BelongsToShop(uint32(productID), shop) {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
 	//Update product
@@ -123,7 +122,7 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 func (h *Handler) CreateProduct(c echo.Context) error {
-	claims, ok := c.Get("shop").(*response.Shop)
+	claims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
@@ -207,7 +206,7 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) ReadToken(c echo.Context) error {
-	claims, ok := c.Get("shop").(*response.Shop)
+	claims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}

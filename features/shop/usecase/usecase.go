@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"order-management/domain"
 	"order-management/entity"
-	"order-management/response"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,28 +30,28 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 }
 
 // Too big O(n^2)
-func (u *shopUsecase) GetAllShopsWithProducts() ([]response.ShopWithProducts, error) {
+func (u *shopUsecase) GetAllShopsWithProducts() ([]entity.ShopWithProducts, error) {
 	shops, err := u.repo.GetAllShops()
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println(shops)
-	shopsResponse := []response.ShopWithProducts{}
+	shopsResponse := []entity.ShopWithProducts{}
 	for _, shop := range shops {
 		products, err := u.repo.GetProductsByShopID(shop.ID)
 		if err != nil {
 			return nil, err
 		}
-		productsResponse := []response.Product{}
+		productsResponse := []entity.ProductResponse{}
 		for _, product := range products {
-			productsResponse = append(productsResponse, response.Product{
+			productsResponse = append(productsResponse, entity.ProductResponse{
 				ID:          product.ID,
 				Name:        product.Name,
 				Description: product.Description,
 				Price:       product.Price,
 			})
 		}
-		shopResponse := response.ShopWithProducts{
+		shopResponse := entity.ShopWithProducts{
 			ID:          shop.ID,
 			Name:        shop.Name,
 			Description: shop.Description,
@@ -63,14 +62,14 @@ func (u *shopUsecase) GetAllShopsWithProducts() ([]response.ShopWithProducts, er
 	return shopsResponse, nil
 }
 
-func (u *shopUsecase) GetAllShops() ([]response.Shop, error) {
+func (u *shopUsecase) GetAllShops() ([]entity.Shop, error) {
 	shops, err := u.repo.GetAllShops()
 	if err != nil {
 		return nil, err
 	}
-	shopsResponse := []response.Shop{}
+	shopsResponse := []entity.Shop{}
 	for _, shop := range shops {
-		shopsResponse = append(shopsResponse, response.Shop{
+		shopsResponse = append(shopsResponse, entity.Shop{
 			ID:          shop.ID,
 			Name:        shop.Name,
 			Description: shop.Description,
@@ -78,25 +77,25 @@ func (u *shopUsecase) GetAllShops() ([]response.Shop, error) {
 	}
 	return shopsResponse, nil
 }
-func (u *shopUsecase) GetShopByName(name string) (response.ShopWithProducts, error) {
+func (u *shopUsecase) GetShopByName(name string) (entity.ShopWithProducts, error) {
 	shop, err := u.repo.GetShopByName(name)
 	if err != nil {
-		return response.ShopWithProducts{}, err
+		return entity.ShopWithProducts{}, err
 	}
 	products, err := u.repo.GetProductsByShopID(shop.ID)
 	if err != nil {
-		return response.ShopWithProducts{}, err
+		return entity.ShopWithProducts{}, err
 	}
-	productsResponse := []response.Product{}
+	productsResponse := []entity.ProductResponse{}
 	for _, product := range products {
-		productsResponse = append(productsResponse, response.Product{
+		productsResponse = append(productsResponse, entity.ProductResponse{
 			ID:          product.ID,
 			Name:        product.Name,
 			Description: product.Description,
 			Price:       product.Price,
 		})
 	}
-	shopResponse := response.ShopWithProducts{
+	shopResponse := entity.ShopWithProducts{
 		ID:          shop.ID,
 		Name:        shop.Name,
 		Description: shop.Description,
@@ -108,14 +107,14 @@ func (u *shopUsecase) GetShopByName(name string) (response.ShopWithProducts, err
 func (u *shopUsecase) Login(name string, password string) (entity.Shop, error) {
 	return u.repo.GetShopByNameWithPassword(name)
 }
-func (u *shopUsecase) GetProductsByShopID(id uint32) ([]response.Product, error) {
+func (u *shopUsecase) GetProductsByShopID(id uint32) ([]entity.Product, error) {
 	products, err := u.repo.GetProductsByShopID(id)
 	if err != nil {
 		return nil, err
 	}
-	productsResponse := []response.Product{}
+	productsResponse := []entity.Product{}
 	for _, product := range products {
-		productsResponse = append(productsResponse, response.Product{
+		productsResponse = append(productsResponse, entity.Product{
 			ID:          product.ID,
 			Name:        product.Name,
 			Description: product.Description,
@@ -125,7 +124,7 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]response.Product, error)
 	return productsResponse, nil
 }
 
-func (u *shopUsecase) BelongsToShop(productID uint32, claims *response.Shop) bool {
+func (u *shopUsecase) BelongsToShop(productID uint32, claims *entity.ShopResponse) bool {
 	product, err := u.repo.GetProductByID(productID)
 	if err != nil {
 		return false

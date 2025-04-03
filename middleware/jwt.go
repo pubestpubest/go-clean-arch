@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"order-management/response"
+	"order-management/entity"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -16,13 +16,13 @@ func ShopAuth() echo.MiddlewareFunc {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 			}
-			token, err := jwt.ParseWithClaims(cookie.Value, &response.Shop{}, func(token *jwt.Token) (interface{}, error) {
+			token, err := jwt.ParseWithClaims(cookie.Value, &entity.ShopResponse{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte(viper.GetString("jwt.secret")), nil
 			})
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 			}
-			claims, ok := token.Claims.(*response.Shop)
+			claims, ok := token.Claims.(*entity.ShopResponse)
 			if !ok || !token.Valid {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 			}
