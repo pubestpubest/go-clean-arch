@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"order-management/domain"
 	"order-management/entity"
+	"order-management/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -104,9 +105,25 @@ func (u *shopUsecase) GetShopByName(name string) (entity.ShopWithProducts, error
 	return shopResponse, nil
 }
 
-func (u *shopUsecase) Login(name string, password string) (entity.Shop, error) {
-	return u.repo.GetShopByNameWithPassword(name)
+func (u *shopUsecase) Login(name string, password string) (string, error) {
+	credentials, err := u.repo.GetShopByNameWithPassword(name)
+	if err != nil {
+		return "", err
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(credentials.Password), []byte(password)); err != nil {
+		return "", err
+	}
+	t, err := utils.GenerateShopJWT(&entity.ShopResponse{
+		ID:          credentials.ID,
+		Name:        credentials.Name,
+		Description: credentials.Description,
+	})
+	if err != nil {
+		return "", err
+	}
+	return t, nil
 }
+
 func (u *shopUsecase) GetProductsByShopID(id uint32) ([]entity.Product, error) {
 	products, err := u.repo.GetProductsByShopID(id)
 	if err != nil {

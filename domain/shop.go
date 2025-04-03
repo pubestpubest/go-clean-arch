@@ -10,7 +10,7 @@ type ShopUsecase interface {
 	GetAllShopsWithProducts() ([]entity.ShopWithProducts, error)
 	GetAllShops() ([]entity.Shop, error)
 	GetShopByName(name string) (entity.ShopWithProducts, error)
-	Login(name string, password string) (entity.Shop, error)
+	Login(name string, password string) (string, error)
 	GetProductsByShopID(id uint32) ([]entity.Product, error)
 	UpdateProduct(req *entity.ProductManagementRequest, product *entity.Product) error
 	DeleteProduct(req *entity.ProductManagementRequest) error

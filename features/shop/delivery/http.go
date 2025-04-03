@@ -8,10 +8,7 @@ import (
 
 	"order-management/middleware"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Handler struct {
@@ -170,40 +167,12 @@ func (h *Handler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "name and password are required")
 	}
 
-	shop, err := h.usecase.Login(req.Name, req.Password)
+	token, err := h.usecase.Login(req.Name, req.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusUnauthorized, err.Error())
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(shop.Password), []byte(req.Password)); err != nil {
-		return c.JSON(http.StatusUnauthorized, "invalid password")
-	}
-
-	products, err := h.usecase.GetProductsByShopID(shop.ID)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	var data = map[string]interface{}{
-		"id":          shop.ID,
-		"name":        shop.Name,
-		"description": shop.Description,
-		"products":    products,
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":          shop.ID,
-		"name":        shop.Name,
-		"description": shop.Description,
-	})
-	t, err := token.SignedString([]byte(viper.GetString("jwt.secret")))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	cookie := &http.Cookie{
-		Name:  "token",
-		Value: t,
-		Path:  "/",
-	}
-	c.SetCookie(cookie)
-	return c.JSON(http.StatusOK, data)
+	c.Response().Header().Set("Authorization", "Bearer "+token)
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) ReadToken(c echo.Context) error {

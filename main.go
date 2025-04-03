@@ -14,7 +14,6 @@ import (
 	userRepository "order-management/features/user/repository"
 	userUsecase "order-management/features/user/usecase"
 
-	"order-management/middleware"
 	"order-management/utils"
 	"os"
 	"os/signal"
@@ -106,11 +105,11 @@ func main() {
 	// Restricted group
 	v1 := e.Group("/v1")
 
-	adminGroup := v1.Group("")
-	adminGroup.Use(middleware.AdminAuth())
+	// adminGroup := v1.Group("")
+	// adminGroup.Use(middleware.AdminAuth())
 
-	customerGroup := v1.Group("")
-	customerGroup.Use(middleware.CustomerAuth())
+	// customerGroup := v1.Group("")
+	// customerGroup.Use(middleware.CustomerAuth())
 
 	userDelivery.NewHandler(v1,
 		userUsecase.NewUserUsecase(
