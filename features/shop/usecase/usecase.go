@@ -141,7 +141,7 @@ func (u *shopUsecase) Login(name string, password string) (string, error) {
 		return "", errors.New("[ShopUsecase.Login]: invalid password")
 	}
 
-	t, err := utils.GenerateShopJWT(&entity.ShopResponse{
+	t, err := utils.GenerateShopJWT(&entity.ShopWithOutPassword{
 		ID:          credentials.ID,
 		Name:        credentials.Name,
 		Description: credentials.Description,
@@ -184,7 +184,7 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]entity.Product, error) {
 }
 
 func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
-	exists, err := u.repo.ShopExists(req.ShopResponse.ID)
+	exists, err := u.repo.ShopExists(req.ShopWithOutPassword.ID)
 	if err != nil {
 		return errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to check shop existence")
 	}
@@ -200,7 +200,7 @@ func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, newPro
 		return errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to get product by id")
 	}
 
-	if product.ShopID != req.ShopResponse.ID {
+	if product.ShopID != req.ShopWithOutPassword.ID {
 		return errors.New("[ShopUsecase.UpdateProduct]: product does not belong to shop")
 	}
 
@@ -211,7 +211,7 @@ func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, newPro
 	return nil
 }
 func (u *shopUsecase) DeleteProduct(req *entity.ProductManagementRequest) error {
-	exists, err := u.repo.ShopExists(req.ShopResponse.ID)
+	exists, err := u.repo.ShopExists(req.ShopWithOutPassword.ID)
 	if err != nil {
 		return errors.Wrap(err, "[ShopUsecase.DeleteProduct]: failed to check shop existence")
 	}
@@ -227,7 +227,7 @@ func (u *shopUsecase) DeleteProduct(req *entity.ProductManagementRequest) error 
 		return errors.Wrap(err, "[ShopUsecase.DeleteProduct]: failed to get product by id")
 	}
 
-	if product.ShopID != req.ShopResponse.ID {
+	if product.ShopID != req.ShopWithOutPassword.ID {
 		return errors.New("[ShopUsecase.DeleteProduct]: product does not belong to shop")
 	}
 

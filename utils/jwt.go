@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func GenerateShopJWT(claims *entity.ShopResponse) (string, error) {
+func GenerateShopJWT(claims *entity.ShopWithOutPassword) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(ViperGetString("jwt.secret")))
 	if err != nil {
@@ -16,14 +16,14 @@ func GenerateShopJWT(claims *entity.ShopResponse) (string, error) {
 	return tokenString, nil
 }
 
-func ValidateShopJWT(tokenString string) (*entity.ShopResponse, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &entity.ShopResponse{}, func(token *jwt.Token) (interface{}, error) {
+func ValidateShopJWT(tokenString string) (*entity.ShopWithOutPassword, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &entity.ShopWithOutPassword{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(ViperGetString("jwt.secret")), nil
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "[utils.ValidateShopJWT]: failed to parse shop jwt")
 	}
-	claims, ok := token.Claims.(*entity.ShopResponse)
+	claims, ok := token.Claims.(*entity.ShopWithOutPassword)
 	if !ok || !token.Valid {
 		return nil, errors.Wrap(err, "[utils.ValidateShopJWT]: invalid token")
 	}

@@ -45,15 +45,15 @@ func (r *shopRepository) GetProductsByShopID(shopID uint32) (products []entity.P
 	return products, nil
 }
 
-func (r *shopRepository) GetShopByName(name string) (shop entity.ShopResponse, err error) {
+func (r *shopRepository) GetShopByName(name string) (shop entity.ShopWithOutPassword, err error) {
 	var entityShop entity.Shop
 	if err := r.db.Where("name = ?", name).First(&entityShop).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return entity.ShopResponse{}, errors.New("[ShopRepository.GetShopByName]: shop not found")
+			return entity.ShopWithOutPassword{}, errors.New("[ShopRepository.GetShopByName]: shop not found")
 		}
-		return entity.ShopResponse{}, errors.Wrap(err, "[ShopRepository.GetShopByName]: failed to get shop by name")
+		return entity.ShopWithOutPassword{}, errors.Wrap(err, "[ShopRepository.GetShopByName]: failed to get shop by name")
 	}
-	shop = entity.ShopResponse{
+	shop = entity.ShopWithOutPassword{
 		ID:          entityShop.ID,
 		Name:        entityShop.Name,
 		Description: entityShop.Description,
@@ -72,7 +72,7 @@ func (r *shopRepository) GetShopByNameWithPassword(name string) (shop entity.Sho
 }
 
 func (r *shopRepository) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
-	if err := r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Updates(newProduct).Error; err != nil {
+	if err := r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopWithOutPassword.ID).Updates(newProduct).Error; err != nil {
 		return errors.Wrap(err, "[ShopRepository.UpdateProduct]: failed to update product")
 	}
 	return nil
@@ -89,7 +89,7 @@ func (r *shopRepository) GetProductByID(productID uint32) (product entity.Produc
 }
 
 func (r *shopRepository) DeleteProduct(req *entity.ProductManagementRequest) error {
-	if err := r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Delete(&entity.Product{}).Error; err != nil {
+	if err := r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopWithOutPassword.ID).Delete(&entity.Product{}).Error; err != nil {
 		return errors.Wrap(err, "[ShopRepository.DeleteProduct]: failed to delete product")
 	}
 	return nil

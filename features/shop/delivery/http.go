@@ -41,7 +41,7 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 }
 
 func (h *Handler) GetShopProfile(c echo.Context) error {
-	shopClaims, ok := c.Get("shop").(*entity.ShopResponse)
+	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "[Handler.GetShopProfile]: no shop claims found",
@@ -103,7 +103,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 		})
 	}
 
-	shop, ok := c.Get("shop").(*entity.ShopResponse)
+	shop, ok := c.Get("shop").(*entity.ShopWithOutPassword)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "[Handler.DeleteProduct]: no shop claims found",
@@ -111,8 +111,8 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 	}
 
 	req := entity.ProductManagementRequest{
-		ShopResponse: *shop,
-		ProductID:    uint32(productID),
+		ShopWithOutPassword: *shop,
+		ProductID:           uint32(productID),
 	}
 
 	if err := h.usecase.DeleteProduct(&req); err != nil {
@@ -151,7 +151,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		})
 	}
 
-	shop, ok := c.Get("shop").(*entity.ShopResponse)
+	shop, ok := c.Get("shop").(*entity.ShopWithOutPassword)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "[Handler.UpdateProduct]: no shop claims found",
@@ -166,8 +166,8 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 	}
 
 	req := entity.ProductManagementRequest{
-		ShopResponse: *shop,
-		ProductID:    uint32(productID),
+		ShopWithOutPassword: *shop,
+		ProductID:           uint32(productID),
 	}
 
 	if err := h.usecase.UpdateProduct(&req, &product); err != nil {
@@ -203,7 +203,7 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 func (h *Handler) CreateProduct(c echo.Context) error {
-	shopClaims, ok := c.Get("shop").(*entity.ShopResponse)
+	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "No shop claims found",
@@ -318,7 +318,7 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) ReadToken(c echo.Context) error {
-	shopClaims, ok := c.Get("shop").(*entity.ShopResponse)
+	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "unauthorized",

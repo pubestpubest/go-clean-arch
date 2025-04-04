@@ -1,6 +1,6 @@
 package entity
 
 type ProductManagementRequest struct {
-	ShopResponse
+	ShopWithOutPassword
 	ProductID uint32 `json:"product_id"`
 }

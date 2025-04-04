@@ -10,7 +10,7 @@ type Shop struct {
 	Products    []Product `gorm:"foreignKey:ShopID"`
 }
 
-type ShopResponse struct {
+type ShopWithOutPassword struct {
 	ID          uint32 `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
