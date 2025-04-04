@@ -1,15 +1,19 @@
 package utils
 
 import (
-	"errors"
 	"order-management/entity"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pkg/errors"
 )
 
 func GenerateShopJWT(claims *entity.ShopResponse) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(ViperGetString("jwt.secret")))
+	tokenString, err := token.SignedString([]byte(ViperGetString("jwt.secret")))
+	if err != nil {
+		return "", errors.Wrap(err, "[utils.GenerateShopJWT]: failed to generate shop jwt")
+	}
+	return tokenString, nil
 }
 
 func ValidateShopJWT(tokenString string) (*entity.ShopResponse, error) {
@@ -17,11 +21,11 @@ func ValidateShopJWT(tokenString string) (*entity.ShopResponse, error) {
 		return []byte(ViperGetString("jwt.secret")), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "[utils.ValidateShopJWT]: failed to parse shop jwt")
 	}
 	claims, ok := token.Claims.(*entity.ShopResponse)
 	if !ok || !token.Valid {
-		return nil, errors.New("invalid token")
+		return nil, errors.Wrap(err, "[utils.ValidateShopJWT]: invalid token")
 	}
 	return claims, nil
 }

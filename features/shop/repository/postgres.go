@@ -4,6 +4,7 @@ import (
 	"order-management/domain"
 	"order-management/entity"
 
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -17,23 +18,29 @@ func NewShopRepository(db *gorm.DB) domain.ShopRepository {
 
 func (r *shopRepository) CreateProduct(product entity.Product, shopID uint32) error {
 	product.ShopID = shopID
-	return r.db.Create(&product).Error
+	if err := r.db.Create(&product).Error; err != nil {
+		return errors.Wrap(err, "[ShopRepository.CreateProduct]: failed to create product")
+	}
+	return nil
 }
 
 func (r *shopRepository) CreateShop(shop entity.Shop) error {
-	return r.db.Create(&shop).Error
+	if err := r.db.Create(&shop).Error; err != nil {
+		return errors.Wrap(err, "[ShopRepository.CreateShop]: failed to create shop")
+	}
+	return nil
 }
 
 func (r *shopRepository) GetAllShops() (shops []entity.Shop, err error) {
 	if err := r.db.Find(&shops).Error; err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "[ShopRepository.GetAllShops]: failed to get all shops")
 	}
 	return shops, nil
 }
 
 func (r *shopRepository) GetProductsByShopID(shopID uint32) (products []entity.Product, err error) {
 	if err := r.db.Where("shop_id = ?", shopID).Find(&products).Error; err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "[ShopRepository.GetProductsByShopID]: failed to get products by shop id")
 	}
 	return products, nil
 }
@@ -41,7 +48,10 @@ func (r *shopRepository) GetProductsByShopID(shopID uint32) (products []entity.P
 func (r *shopRepository) GetShopByName(name string) (shop entity.ShopResponse, err error) {
 	var entityShop entity.Shop
 	if err := r.db.Where("name = ?", name).First(&entityShop).Error; err != nil {
-		return entity.ShopResponse{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.ShopResponse{}, errors.New("[ShopRepository.GetShopByName]: shop not found")
+		}
+		return entity.ShopResponse{}, errors.Wrap(err, "[ShopRepository.GetShopByName]: failed to get shop by name")
 	}
 	shop = entity.ShopResponse{
 		ID:          entityShop.ID,
@@ -53,22 +63,47 @@ func (r *shopRepository) GetShopByName(name string) (shop entity.ShopResponse, e
 
 func (r *shopRepository) GetShopByNameWithPassword(name string) (shop entity.Shop, err error) {
 	if err := r.db.Where("name = ?", name).First(&shop).Error; err != nil {
-		return entity.Shop{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.Shop{}, errors.New("[ShopRepository.GetShopByNameWithPassword]: shop not found")
+		}
+		return entity.Shop{}, errors.Wrap(err, "[ShopRepository.GetShopByNameWithPassword]: failed to get shop by name with password")
 	}
 	return shop, nil
 }
 
 func (r *shopRepository) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
-	return r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Updates(newProduct).Error
+	if err := r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Updates(newProduct).Error; err != nil {
+		return errors.Wrap(err, "[ShopRepository.UpdateProduct]: failed to update product")
+	}
+	return nil
 }
 
 func (r *shopRepository) GetProductByID(productID uint32) (product entity.Product, err error) {
 	if err := r.db.First(&product, productID).Error; err != nil {
-		return entity.Product{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.Product{}, errors.New("[ShopRepository.GetProductByID]: product not found")
+		}
+		return entity.Product{}, errors.Wrap(err, "[ShopRepository.GetProductByID]: failed to get product by id")
 	}
 	return product, nil
 }
 
 func (r *shopRepository) DeleteProduct(req *entity.ProductManagementRequest) error {
-	return r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Delete(&entity.Product{}).Error
+	if err := r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopResponse.ID).Delete(&entity.Product{}).Error; err != nil {
+		return errors.Wrap(err, "[ShopRepository.DeleteProduct]: failed to delete product")
+	}
+	return nil
+}
+
+func (r *shopRepository) ShopExists(id uint32) (bool, error) {
+	var exists bool
+	err := r.db.Model(&entity.Shop{}).
+		Select("count(*) > 0").
+		Where("id = ?", id).
+		Find(&exists).
+		Error
+	if err != nil {
+		return false, errors.Wrap(err, "[ShopRepository.ShopExists]: failed to check shop existence")
+	}
+	return exists, nil
 }

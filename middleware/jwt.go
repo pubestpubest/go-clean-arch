@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"order-management/entity"
 	"order-management/utils"
 	"strings"
 
@@ -13,16 +14,22 @@ func ShopAuth() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			bearerToken := c.Request().Header.Get("Authorization")
 			if bearerToken == "" {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
+					Error: "No authorization header found",
+				})
 			}
 			str := strings.Split(bearerToken, " ")
 			if len(str) != 2 {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
+					Error: "Invalid authorization header",
+				})
 			}
 			token := str[1]
 			claims, err := utils.ValidateShopJWT(token)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, token)
+				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
+					Error: err.Error(),
+				})
 			}
 			c.Set("shop", claims)
 			return next(c)

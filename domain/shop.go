@@ -26,4 +26,5 @@ type ShopRepository interface {
 	GetProductByID(productID uint32) (entity.Product, error)
 	DeleteProduct(req *entity.ProductManagementRequest) error
 	GetShopByNameWithPassword(name string) (entity.Shop, error)
+	ShopExists(id uint32) (bool, error)
 }

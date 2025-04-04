@@ -1,14 +1,13 @@
 package entity
 
-type ResponseData struct {
-	Data interface{} `json:"data"`
-}
-
-type ResponsePagination struct {
-	Data  interface{} `json:"data"`
-	Total int         `json:"total"`
-}
-
 type ResponseError struct {
-	Error string `json:"error"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
+type Response struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+	Status  int         `json:"status"`
 }
