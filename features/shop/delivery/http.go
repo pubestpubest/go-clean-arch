@@ -39,11 +39,12 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 }
 
 func (h *Handler) GetShopProfile(c echo.Context) error {
-	claims, ok := c.Get("shop").(*entity.ShopResponse)
+	shopClaims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
-	shop, err := h.usecase.GetShopByName(claims.Name)
+
+	shop, err := h.usecase.GetShopByName(shopClaims.Name)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -55,10 +56,12 @@ func (h *Handler) GetProductsByShopID(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+
 	products, err := h.usecase.GetProductsByShopID(uint32(shopID))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
 	return c.JSON(http.StatusOK, products)
 }
 
@@ -67,14 +70,17 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+
 	shop, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
+
 	req := entity.ProductManagementRequest{
 		ShopResponse: *shop,
 		ProductID:    uint32(productID),
 	}
+
 	if err := h.usecase.DeleteProduct(&req); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -82,17 +88,17 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 }
 
 func (h *Handler) UpdateProduct(c echo.Context) error {
-	//Param
+	// Param
 	productID, err := strconv.ParseUint(c.Param("product_id"), 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	//Get shop from JWT
+	// Get shop from JWT
 	shop, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
-	//Bind
+	// Bind
 	product := entity.Product{}
 	if err := c.Bind(&product); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -101,7 +107,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		ShopResponse: *shop,
 		ProductID:    uint32(productID),
 	}
-	//Update product
+	// Update product
 	if err := h.usecase.UpdateProduct(&req, &product); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -109,28 +115,24 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 }
 
 func (h *Handler) Logout(c echo.Context) error {
-	cookie := &http.Cookie{
-		Name:   "token",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1,
-	}
-	c.SetCookie(cookie)
 	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) CreateProduct(c echo.Context) error {
-	claims, ok := c.Get("shop").(*entity.ShopResponse)
+	shopClaims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
+
 	req := entity.Product{}
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	if err := h.usecase.CreateProduct(req, claims.ID); err != nil {
+
+	if err := h.usecase.CreateProduct(req, shopClaims.ID); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
 	return c.NoContent(http.StatusOK)
 }
 
@@ -148,9 +150,11 @@ func (h *Handler) CreateShop(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+
 	if req.Password == "" {
 		return c.JSON(http.StatusBadRequest, "password is required")
 	}
+
 	if err := h.usecase.CreateShop(req); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -163,6 +167,7 @@ func (h *Handler) Login(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+
 	if req.Name == "" || req.Password == "" {
 		return c.JSON(http.StatusBadRequest, "name and password are required")
 	}
@@ -171,14 +176,17 @@ func (h *Handler) Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, err.Error())
 	}
+
 	c.Response().Header().Set("Authorization", "Bearer "+token)
+
 	return c.NoContent(http.StatusOK)
 }
 
 func (h *Handler) ReadToken(c echo.Context) error {
-	claims, ok := c.Get("shop").(*entity.ShopResponse)
+	shopClaims, ok := c.Get("shop").(*entity.ShopResponse)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, "unauthorized")
 	}
-	return c.JSON(http.StatusOK, claims)
+
+	return c.JSON(http.StatusOK, shopClaims)
 }
