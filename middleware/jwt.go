@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 func ShopAuth() echo.MiddlewareFunc {
@@ -25,7 +26,7 @@ func ShopAuth() echo.MiddlewareFunc {
 				})
 			}
 			token := str[1]
-			claims, err := utils.ValidateShopJWT(token)
+			claims, err := utils.ValidateJWT(token, []byte(viper.GetString("jwt.shopsecret")))
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
 					Error: err.Error(),

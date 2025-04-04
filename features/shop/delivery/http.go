@@ -111,8 +111,8 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 	}
 
 	req := entity.ProductManagementRequest{
-		ShopWithOutPassword: *shop,
-		ProductID:           uint32(productID),
+		ShopID:    shop.ID,
+		ProductID: uint32(productID),
 	}
 
 	if err := h.usecase.DeleteProduct(&req); err != nil {
@@ -166,8 +166,8 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 	}
 
 	req := entity.ProductManagementRequest{
-		ShopWithOutPassword: *shop,
-		ProductID:           uint32(productID),
+		ShopID:    shop.ID,
+		ProductID: uint32(productID),
 	}
 
 	if err := h.usecase.UpdateProduct(&req, &product); err != nil {

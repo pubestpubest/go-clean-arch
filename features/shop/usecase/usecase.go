@@ -7,6 +7,7 @@ import (
 	"order-management/utils"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -141,11 +142,11 @@ func (u *shopUsecase) Login(name string, password string) (string, error) {
 		return "", errors.New("[ShopUsecase.Login]: invalid password")
 	}
 
-	t, err := utils.GenerateShopJWT(&entity.ShopWithOutPassword{
-		ID:          credentials.ID,
-		Name:        credentials.Name,
-		Description: credentials.Description,
-	})
+	t, err := utils.GenerateJWT(map[string]interface{}{
+		"id":          credentials.ID,
+		"name":        credentials.Name,
+		"description": credentials.Description,
+	}, []byte(viper.GetString("jwt.shopsecret")))
 
 	if err != nil {
 		return "", errors.Wrap(err, "[ShopUsecase.Login]: failed to generate shop jwt")
@@ -183,8 +184,8 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]entity.Product, error) {
 	return productsResponse, nil
 }
 
-func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
-	exists, err := u.repo.ShopExists(req.ShopWithOutPassword.ID)
+func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, product *entity.Product) error {
+	exists, err := u.repo.ShopExists(req.ShopID)
 	if err != nil {
 		return errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to check shop existence")
 	}
@@ -192,43 +193,19 @@ func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, newPro
 		return errors.New("[ShopUsecase.UpdateProduct]: shop not found")
 	}
 
-	product, err := u.repo.GetProductByID(req.ProductID)
-	if err != nil {
-		if err.Error() == "[ShopRepository.GetProductByID]: product not found" {
-			return errors.New("[ShopUsecase.UpdateProduct]: product not found")
-		}
-		return errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to get product by id")
-	}
-
-	if product.ShopID != req.ShopWithOutPassword.ID {
-		return errors.New("[ShopUsecase.UpdateProduct]: product does not belong to shop")
-	}
-
-	newProduct.ID = req.ProductID
-	if err := u.repo.UpdateProduct(req, newProduct); err != nil {
+	product.ID = req.ProductID
+	if err := u.repo.UpdateProduct(req, product); err != nil {
 		return errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to update product")
 	}
 	return nil
 }
 func (u *shopUsecase) DeleteProduct(req *entity.ProductManagementRequest) error {
-	exists, err := u.repo.ShopExists(req.ShopWithOutPassword.ID)
+	exists, err := u.repo.ShopExists(req.ShopID)
 	if err != nil {
 		return errors.Wrap(err, "[ShopUsecase.DeleteProduct]: failed to check shop existence")
 	}
 	if !exists {
 		return errors.New("[ShopUsecase.DeleteProduct]: shop not found")
-	}
-
-	product, err := u.repo.GetProductByID(req.ProductID)
-	if err != nil {
-		if err.Error() == "[ShopRepository.GetProductByID]: product not found" {
-			return errors.New("[ShopUsecase.DeleteProduct]: product not found")
-		}
-		return errors.Wrap(err, "[ShopUsecase.DeleteProduct]: failed to get product by id")
-	}
-
-	if product.ShopID != req.ShopWithOutPassword.ID {
-		return errors.New("[ShopUsecase.DeleteProduct]: product does not belong to shop")
 	}
 
 	if err := u.repo.DeleteProduct(req); err != nil {

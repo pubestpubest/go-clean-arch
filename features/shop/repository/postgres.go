@@ -72,7 +72,7 @@ func (r *shopRepository) GetShopByNameWithPassword(name string) (shop entity.Sho
 }
 
 func (r *shopRepository) UpdateProduct(req *entity.ProductManagementRequest, newProduct *entity.Product) error {
-	if err := r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopWithOutPassword.ID).Updates(newProduct).Error; err != nil {
+	if err := r.db.Model(&entity.Product{}).Where("id = ? AND shop_id = ?", req.ProductID, req.ShopID).Updates(newProduct).Error; err != nil {
 		return errors.Wrap(err, "[ShopRepository.UpdateProduct]: failed to update product")
 	}
 	return nil
@@ -89,7 +89,7 @@ func (r *shopRepository) GetProductByID(productID uint32) (product entity.Produc
 }
 
 func (r *shopRepository) DeleteProduct(req *entity.ProductManagementRequest) error {
-	if err := r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopWithOutPassword.ID).Delete(&entity.Product{}).Error; err != nil {
+	if err := r.db.Where("id = ? AND shop_id = ?", req.ProductID, req.ShopID).Delete(&entity.Product{}).Error; err != nil {
 		return errors.Wrap(err, "[ShopRepository.DeleteProduct]: failed to delete product")
 	}
 	return nil

@@ -1,29 +1,31 @@
 package utils
 
 import (
-	"order-management/entity"
-
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
 
-func GenerateShopJWT(claims *entity.ShopWithOutPassword) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(ViperGetString("jwt.secret")))
+func GenerateJWT(payload map[string]interface{}, secret []byte) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	for k, v := range payload {
+		claims[k] = v
+	}
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", errors.Wrap(err, "[utils.GenerateShopJWT]: failed to generate shop jwt")
 	}
 	return tokenString, nil
 }
 
-func ValidateShopJWT(tokenString string) (*entity.ShopWithOutPassword, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &entity.ShopWithOutPassword{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(ViperGetString("jwt.secret")), nil
+func ValidateJWT(tokenString string, secret []byte) (*jwt.MapClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return secret, nil
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "[utils.ValidateShopJWT]: failed to parse shop jwt")
 	}
-	claims, ok := token.Claims.(*entity.ShopWithOutPassword)
+	claims, ok := token.Claims.(*jwt.MapClaims)
 	if !ok || !token.Valid {
 		return nil, errors.Wrap(err, "[utils.ValidateShopJWT]: invalid token")
 	}
