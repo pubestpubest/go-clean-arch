@@ -43,7 +43,7 @@ func serveGracefulShutdown(e *echo.Echo) {
 	}()
 
 	// Wait for interrupt signal to gracefully shutdown the server with a timeout
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
