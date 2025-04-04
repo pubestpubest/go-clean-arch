@@ -32,7 +32,16 @@ func ShopAuth() echo.MiddlewareFunc {
 					Error: err.Error(),
 				})
 			}
-			c.Set("shop", claims)
+
+			// Convert MapClaims to ShopWithOutPassword
+			shopClaims := &entity.ShopWithOutPassword{
+				ID:          uint32((*claims)["id"].(float64)),
+				Name:        (*claims)["name"].(string),
+				Description: (*claims)["description"].(string),
+			}
+
+			c.Set("shop", shopClaims)
+
 			return next(c)
 		}
 	}
