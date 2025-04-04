@@ -20,20 +20,20 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 
 	// Public group - no authentication required
 	publicGroup := e.Group("")
-	publicGroup.GET("/shops", h.GetAllShops)                           // Anyone can view shops
-	publicGroup.POST("/shops/register", h.CreateShop)                  // Public registration
-	publicGroup.POST("/shops/login", h.Login)                          // Public login
-	publicGroup.GET("/shops/:shop_id/products", h.GetProductsByShopID) // Anyone can view products
+	publicGroup.GET("/", h.GetAllShops)                          // Anyone can view shops
+	publicGroup.POST("/register", h.CreateShop)                  // Public registration
+	publicGroup.POST("/login", h.Login)                          // Public login
+	publicGroup.GET("/:shop_id/products", h.GetProductsByShopID) // Anyone can view products
 
 	// Authenticated group - requires JWT
 	authGroup := e.Group("")
 	authGroup.Use(middleware.ShopAuth())
-	authGroup.POST("/shops/products", h.CreateProduct)               // Only shop owner can create products
-	authGroup.PUT("/shops/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
-	authGroup.DELETE("/shops/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
-	authGroup.GET("/shops/me", h.ReadToken)                          // Get current shop profile from JWT
-	authGroup.POST("/shops/logout", h.Logout)                        // Logout requires JWT
-	authGroup.GET("/shops/profile", h.GetShopProfile)                // Get detailed profile requires JWT
+	authGroup.POST("/products", h.CreateProduct)               // Only shop owner can create products
+	authGroup.PUT("/products/:product_id", h.UpdateProduct)    // Only shop owner can update their products
+	authGroup.DELETE("/products/:product_id", h.DeleteProduct) // Only shop owner can delete their products
+	authGroup.GET("/me", h.ReadToken)                          // Get current shop profile from JWT
+	authGroup.POST("/logout", h.Logout)                        // Logout requires JWT
+	authGroup.GET("/profile", h.GetShopProfile)                // Get detailed profile requires JWT
 
 	return &h
 }

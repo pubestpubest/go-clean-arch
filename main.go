@@ -103,7 +103,7 @@ func main() {
 	})
 
 	// Restricted group
-	v1 := e.Group("/v1")
+	// v1 := e.Group("/v1")
 
 	// adminGroup := v1.Group("")
 	// adminGroup.Use(middleware.AdminAuth())
@@ -111,13 +111,17 @@ func main() {
 	// customerGroup := v1.Group("")
 	// customerGroup.Use(middleware.CustomerAuth())
 
-	userDelivery.NewHandler(v1,
+	shopGroup := e.Group("/shops")
+
+	userGroup := e.Group("/users")
+
+	userDelivery.NewHandler(userGroup,
 		userUsecase.NewUserUsecase(
 			userRepository.NewUserRepository(DB),
 		),
 	)
 
-	shopDelivery.NewHandler(v1,
+	shopDelivery.NewHandler(shopGroup,
 		shopUsecase.NewShopUsecase(
 			shopRepository.NewShopRepository(DB),
 		),
