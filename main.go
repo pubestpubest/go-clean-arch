@@ -7,11 +7,13 @@ import (
 	"net/http"
 
 	"order-management/entity"
+	shopDelivery "order-management/features/shop/delivery"
+	shopRepository "order-management/features/shop/repository"
+	shopUsecase "order-management/features/shop/usecase"
 	userDelivery "order-management/features/user/delivery"
 	userRepository "order-management/features/user/repository"
 	userUsecase "order-management/features/user/usecase"
 
-	"order-management/middleware"
 	"order-management/utils"
 	"os"
 	"os/signal"
@@ -41,7 +43,7 @@ func serveGracefulShutdown(e *echo.Echo) {
 	}()
 
 	// Wait for interrupt signal to gracefully shutdown the server with a timeout
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
@@ -101,17 +103,27 @@ func main() {
 	})
 
 	// Restricted group
-	v1 := e.Group("/v1")
+	// v1 := e.Group("/v1")
 
-	adminGroup := v1.Group("")
-	adminGroup.Use(middleware.AdminAuth())
+	// adminGroup := v1.Group("")
+	// adminGroup.Use(middleware.AdminAuth())
 
-	customerGroup := v1.Group("")
-	customerGroup.Use(middleware.CustomerAuth())
+	// customerGroup := v1.Group("")
+	// customerGroup.Use(middleware.CustomerAuth())
 
-	userDelivery.NewHandler(v1,
+	shopGroup := e.Group("/shops")
+
+	userGroup := e.Group("/users")
+
+	userDelivery.NewHandler(userGroup,
 		userUsecase.NewUserUsecase(
 			userRepository.NewUserRepository(DB),
+		),
+	)
+
+	shopDelivery.NewHandler(shopGroup,
+		shopUsecase.NewShopUsecase(
+			shopRepository.NewShopRepository(DB),
 		),
 	)
 
