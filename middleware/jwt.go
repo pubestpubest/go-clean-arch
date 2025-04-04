@@ -41,7 +41,14 @@ func ShopAuth() echo.MiddlewareFunc {
 			}
 
 			c.Set("shop", shopClaims)
+      return next(c)
+		}
+	}
+}
 
+func UserAuth() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
 			return next(c)
 		}
 	}

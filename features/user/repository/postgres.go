@@ -18,3 +18,22 @@ func NewUserRepository(db *gorm.DB) domain.UserRepository {
 func (r *userRepository) CreateUser(user entity.User) error {
 	return r.db.Create(&user).Error
 }
+
+func (r *userRepository) GetUserByID(id uint32) (user entity.User, err error) {
+	err = r.db.First(&user, id).Error
+	return
+}
+
+func (r *userRepository) GetUserByEmail(email string) (user entity.User, err error) {
+	err = r.db.Where("email = ?", email).First(&user).Error
+	return
+}
+
+func (r *userRepository) UpdateUser(user entity.User) error {
+	return r.db.Save(&user).Error
+}
+
+// Didn't implement soft-delete user
+func (r *userRepository) DeleteUser(user entity.User) error {
+	return r.db.Delete(&user).Error
+}
