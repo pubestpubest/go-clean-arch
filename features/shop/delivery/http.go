@@ -4,11 +4,14 @@ import (
 	"net/http"
 	"order-management/domain"
 	"order-management/entity"
+	"order-management/utils"
 	"strconv"
 
 	"order-management/middleware"
 
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -19,7 +22,6 @@ type Handler struct {
 
 func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 	h := Handler{usecase: u}
-
 	// Public group - no authentication required
 	publicGroup := e.Group("")
 	publicGroup.GET("", h.GetAllShops)                           // Anyone can view shops
@@ -41,24 +43,40 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 }
 
 func (h *Handler) GetShopProfile(c echo.Context) error {
+	log.Trace("Entering function GetShopProfile()")
 	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
 	if !ok {
+		err := errors.New("[Handler.GetShopProfile]: no shop claims found")
+		log.WithError(err).Error("Failed to get shop claims from context")
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
-			Error: "[Handler.GetShopProfile]: no shop claims found",
+			Error: utils.StandardError(err),
 		})
 	}
 
+	log.WithField("shopName", shopClaims.Name).Debug("Attempting to retrieve shop profile")
 	shop, err := h.usecase.GetShopByName(shopClaims.Name)
 	if err != nil {
 		if err.Error() == "[ShopUsecase.GetShopByName]: shop not found" {
+			// If this happens, it means the shop name is not in the database
+			// Or the JWT secret is compromised
+			log.WithFields(log.Fields{
+				"shopName": shopClaims.Name,
+				"error":    err,
+			}).Warn("Shop not found")
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: errors.Wrap(err, "[Handler.GetShopProfile]: shop not found").Error(),
+				Error: utils.StandardError(errors.Wrap(err, "[Handler.GetShopProfile]: shop not found")),
 			})
 		}
+		log.WithFields(log.Fields{
+			"shopName": shopClaims.Name,
+			"error":    err,
+		}).Error("Internal server error while retrieving shop profile")
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: errors.Wrap(err, "[Handler.GetShopProfile]: internal server error").Error(),
+			Error: utils.StandardError(errors.Wrap(err, "[Handler.GetShopProfile]: internal server error")),
 		})
 	}
+
+	log.WithField("shopName", shopClaims.Name).Info("Shop profile retrieved successfully")
 	return c.JSON(http.StatusOK, entity.Response{
 		Success: true,
 		Message: "Shop profile retrieved successfully",

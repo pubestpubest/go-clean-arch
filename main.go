@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"order-management/entity"
@@ -23,6 +22,9 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	// joonix "github.com/joonix/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var runEnv string
@@ -94,8 +96,17 @@ func init() {
 func main() {
 	e := echo.New()
 
-	e.Use(echoMiddleware.Logger())
+	// e.Use(echoMiddleware.Logger())
 	e.Use(echoMiddleware.Recover())
+
+	// log.SetFormatter(joonix.NewFormatter())
+	log.SetLevel(log.TraceLevel)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: false,
+		FullTimestamp: false,
+	})
+
+	log.Info("Starting server")
 
 	// Unauthenticated route
 	e.GET("/", func(c echo.Context) error {
