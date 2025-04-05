@@ -99,7 +99,8 @@ func (u *shopUsecase) GetShopByName(name string) (entity.ShopWithProducts, error
 	shop, err := u.repo.GetShopByName(name)
 	if err != nil {
 		if err.Error() == "[ShopRepository.GetShopByName]: shop not found" {
-			return entity.ShopWithProducts{}, errors.New("[ShopUsecase.GetShopByName]: shop not found")
+			err = errors.New("[ShopUsecase.GetShopByName]: shop not found")
+			return entity.ShopWithProducts{}, err
 		}
 		return entity.ShopWithProducts{}, errors.Wrap(err, "[ShopUsecase.GetShopByName]: failed to get shop by name")
 	}

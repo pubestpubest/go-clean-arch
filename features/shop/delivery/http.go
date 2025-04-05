@@ -58,21 +58,21 @@ func (h *Handler) GetShopProfile(c echo.Context) error {
 	if err != nil {
 		if err.Error() == "[ShopUsecase.GetShopByName]: shop not found" {
 			// If this happens, it means the shop name is not in the database
-			// Or the JWT secret is compromised
+			// the JWT secret is compromised or the shop is deleted
+			err = errors.Wrap(err, "[Handler.GetShopProfile]")
 			log.WithFields(log.Fields{
 				"shopName": shopClaims.Name,
-				"error":    err,
-			}).Warn("Shop not found")
+			}).WithError(err).Warn("Shop not found")
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: utils.StandardError(errors.Wrap(err, "[Handler.GetShopProfile]: shop not found")),
+				Error: utils.StandardError(err),
 			})
 		}
+		err = errors.Wrap(err, "[Handler.GetShopProfile]: ")
 		log.WithFields(log.Fields{
 			"shopName": shopClaims.Name,
-			"error":    err,
-		}).Error("Internal server error while retrieving shop profile")
+		}).WithError(err).Error("Internal server error while retrieving shop profile")
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: utils.StandardError(errors.Wrap(err, "[Handler.GetShopProfile]: internal server error")),
+			Error: utils.StandardError(err),
 		})
 	}
 
