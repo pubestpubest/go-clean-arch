@@ -31,12 +31,6 @@ func (u *shopUsecase) CreateProduct(product entity.Product, shopID uint32) error
 
 	if err := u.repo.CreateProduct(product, shopID); err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.CreateProduct]: failed to create product")
-
-		log.WithFields(log.Fields{
-			"product": product,
-			"shopID":  shopID,
-		}).WithError(err).Error("Failed to create product")
-
 		return err
 	}
 
@@ -54,11 +48,6 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(shop.Password), bcrypt.DefaultCost)
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.CreateShop]: failed to hash password")
-
-		log.WithFields(log.Fields{
-			"shop": shop,
-		}).WithError(err).Error("Failed to hash password")
-
 		return err
 	}
 
@@ -66,11 +55,6 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 
 	if err := u.repo.CreateShop(shop); err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.CreateShop]: failed to create shop")
-
-		log.WithFields(log.Fields{
-			"shop": shop,
-		}).WithError(err).Error("Failed to create shop")
-
 		return err
 	}
 	return nil
@@ -84,9 +68,6 @@ func (u *shopUsecase) GetAllShopsWithProducts() ([]entity.ShopWithProducts, erro
 	shops, err := u.repo.GetAllShops()
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.GetAllShopsWithProducts]: failed to get all shops")
-
-		log.WithError(err).Error("Failed to get all shops")
-
 		return nil, err
 	}
 
@@ -100,11 +81,6 @@ func (u *shopUsecase) GetAllShopsWithProducts() ([]entity.ShopWithProducts, erro
 		products, err := u.repo.GetProductsByShopID(shop.ID)
 		if err != nil {
 			err = errors.Wrap(err, "[ShopUsecase.GetAllShopsWithProducts]: failed to get products by shop id")
-
-			log.WithFields(log.Fields{
-				"shopID": shop.ID,
-			}).WithError(err).Error("Failed to get products by shop id")
-
 			return nil, err
 		}
 		productsResponse := []entity.ProductResponse{}
@@ -137,9 +113,6 @@ func (u *shopUsecase) GetAllShops() ([]entity.Shop, error) {
 	shops, err := u.repo.GetAllShops()
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.GetAllShops]: failed to get all shops")
-
-		log.WithError(err).Error("Failed to get all shops")
-
 		return nil, err
 	}
 
@@ -154,6 +127,7 @@ func (u *shopUsecase) GetAllShops() ([]entity.Shop, error) {
 
 	return shopsResponse, nil
 }
+
 func (u *shopUsecase) GetShopByName(name string) (entity.ShopWithProducts, error) {
 	log.Trace("Entering function GetShopByName()")
 	defer log.Trace("Exiting function GetShopByName()")
@@ -164,27 +138,16 @@ func (u *shopUsecase) GetShopByName(name string) (entity.ShopWithProducts, error
 	if err != nil {
 		if err.Error() == "[ShopRepository.GetShopByName]: shop not found" {
 			err = errors.New("[ShopUsecase.GetShopByName]: shop not found")
-
-			log.WithError(err).Warn("Shop not found")
-
 			return entity.ShopWithProducts{}, err
 		}
 
 		err = errors.Wrap(err, "[ShopUsecase.GetShopByName]: failed to get shop by name")
-
-		log.WithError(err).Error("Failed to get shop by name")
-
 		return entity.ShopWithProducts{}, err
 	}
 
 	products, err := u.repo.GetProductsByShopID(shop.ID)
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.GetShopByName]: failed to get products by shop id")
-
-		log.WithFields(log.Fields{
-			"shopID": shop.ID,
-		}).WithError(err).Error("Failed to get products by shop id")
-
 		return entity.ShopWithProducts{}, err
 	}
 
@@ -220,24 +183,15 @@ func (u *shopUsecase) Login(name string, password string) (string, error) {
 	if err != nil {
 		if err.Error() == "[ShopRepository.GetShopByNameWithPassword]: shop not found" {
 			err = errors.New("[ShopUsecase.Login]: shop not found")
-
-			log.WithError(err).Warn("Shop not found")
-
 			return "", err
 		}
 
 		err = errors.Wrap(err, "[ShopUsecase.Login]: failed to get shop by name with password")
-
-		log.WithError(err).Error("Failed to get shop by name with password")
-
 		return "", err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(credentials.Password), []byte(password)); err != nil {
 		err = errors.New("[ShopUsecase.Login]: invalid password")
-
-		log.WithError(err).Warn("Invalid password")
-
 		return "", err
 	}
 
@@ -249,9 +203,6 @@ func (u *shopUsecase) Login(name string, password string) (string, error) {
 
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.Login]: failed to generate shop jwt")
-
-		log.WithError(err).Error("Failed to generate shop jwt")
-
 		return "", err
 	}
 
@@ -270,18 +221,10 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]entity.Product, error) {
 	exists, err := u.repo.ShopExists(id)
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.GetProductsByShopID]: failed to check shop existence")
-
-		log.WithFields(log.Fields{
-			"id": id,
-		}).WithError(err).Error("Failed to check shop existence")
-
 		return nil, err
 	}
 	if !exists {
 		err = errors.New("[ShopUsecase.GetProductsByShopID]: shop not found")
-
-		log.WithError(err).Warn("Shop not found")
-
 		return nil, err
 	}
 
@@ -289,11 +232,6 @@ func (u *shopUsecase) GetProductsByShopID(id uint32) ([]entity.Product, error) {
 	products, err := u.repo.GetProductsByShopID(id)
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.GetProductsByShopID]: failed to get products by shop id")
-
-		log.WithFields(log.Fields{
-			"id": id,
-		}).WithError(err).Error("Failed to get products by shop id")
-
 		return nil, err
 	}
 
@@ -323,35 +261,21 @@ func (u *shopUsecase) UpdateProduct(req *entity.ProductManagementRequest, produc
 	exists, err := u.repo.ShopExists(req.ShopID)
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to check shop existence")
-
-		log.WithFields(log.Fields{
-			"req":     req,
-			"product": product,
-		}).WithError(err).Error("Failed to check shop existence")
-
 		return err
 	}
 	if !exists {
 		err = errors.New("[ShopUsecase.UpdateProduct]: shop not found")
-
-		log.WithError(err).Warn("Shop not found")
-
 		return err
 	}
 
 	product.ID = req.ProductID
 	if err := u.repo.UpdateProduct(req, product); err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.UpdateProduct]: failed to update product")
-
-		log.WithFields(log.Fields{
-			"req":     req,
-			"product": product,
-		}).WithError(err).Error("Failed to update product")
-
 		return err
 	}
 	return nil
 }
+
 func (u *shopUsecase) DeleteProduct(req *entity.ProductManagementRequest) error {
 	log.Trace("Entering function DeleteProduct()")
 	defer log.Trace("Exiting function DeleteProduct()")
@@ -363,28 +287,15 @@ func (u *shopUsecase) DeleteProduct(req *entity.ProductManagementRequest) error 
 	exists, err := u.repo.ShopExists(req.ShopID)
 	if err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.DeleteProduct]: failed to check shop existence")
-
-		log.WithFields(log.Fields{
-			"req": req,
-		}).WithError(err).Error("Failed to check shop existence")
-
 		return err
 	}
 	if !exists {
 		err = errors.New("[ShopUsecase.DeleteProduct]: shop not found")
-
-		log.WithError(err).Warn("Shop not found")
-
 		return err
 	}
 
 	if err := u.repo.DeleteProduct(req); err != nil {
 		err = errors.Wrap(err, "[ShopUsecase.DeleteProduct]: failed to delete product")
-
-		log.WithFields(log.Fields{
-			"req": req,
-		}).WithError(err).Error("Failed to delete product")
-
 		return err
 	}
 	return nil
