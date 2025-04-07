@@ -415,7 +415,7 @@ func (h *Handler) CreateShop(c echo.Context) error {
 
 	if err := h.usecase.CreateShop(req); err != nil {
 		// Check if the error message indicates a duplicate key
-		if err.Error() == "[ShopRepository.CreateShop]: shop already exists" {
+		if err.Error() == "[ShopUsecase.CreateShop]: shop already exists" {
 			err = errors.Wrap(err, "[Handler.CreateShop]: shop already exists")
 
 			log.WithFields(log.Fields{
