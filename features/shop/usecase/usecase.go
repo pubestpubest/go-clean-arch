@@ -9,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type shopUsecase struct {
@@ -55,6 +54,7 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 
 	if err := u.repo.CreateShop(shop); err != nil {
 		if err.Error() == "[ShopRepository.CreateShop]: shop already exists" {
+			err = errors.Wrap(err, "[ShopUsecase.CreateShop]: shop already exists")
 			return err
 		}
 		err = errors.Wrap(err, "[ShopUsecase.CreateShop]: failed to create shop")
@@ -75,7 +75,7 @@ func (u *shopUsecase) GetAllShopsWithProducts() ([]entity.ShopWithProducts, erro
 	}
 
 	if len(shops) == 0 {
-		err = errors.Wrap(gorm.ErrRecordNotFound, "[ShopUsecase.GetAllShopsWithProducts]: no shops found")
+		err = errors.New("[ShopUsecase.GetAllShopsWithProducts]: no shops found")
 		return nil, err
 	}
 
