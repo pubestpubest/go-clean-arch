@@ -22,8 +22,10 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	// joonix "github.com/joonix/log"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,6 +50,8 @@ func serveGracefulShutdown(e *echo.Echo) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+
+	log.Info("Server shutting down")
 
 	gracefulShutdownTimeout := 30 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
@@ -102,7 +106,7 @@ func main() {
 	// log.SetFormatter(joonix.NewFormatter())
 	log.SetLevel(log.TraceLevel)
 	log.SetFormatter(&log.TextFormatter{
-		DisableColors: false,
+		ForceColors:   true,
 		FullTimestamp: false,
 	})
 
@@ -150,9 +154,26 @@ func connectDB() error {
 		utils.ViperGetString("postgres.port"))
 
 	var err error
-	DB, err = gorm.Open(postgres.Open(connectionString), &gorm.Config{})
+	log.Info("Connecting to database")
+	DB, err = gorm.Open(postgres.Open(connectionString), &gorm.Config{
+		Logger: logger.New(
+			logrus.StandardLogger(),
+			logger.Config{
+				SlowThreshold:             time.Second,
+				LogLevel:                  logger.Silent,
+				IgnoreRecordNotFoundError: true,
+				Colorful:                  false,
+			},
+		),
+	})
+
+	if err != nil {
+		log.Error("Failed to connect to database")
+		return err
+	}
 
 	migrateDB()
 
+	defer log.Info("Database connected")
 	return err
 }

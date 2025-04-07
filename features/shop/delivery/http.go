@@ -44,39 +44,52 @@ func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
 
 func (h *Handler) GetShopProfile(c echo.Context) error {
 	log.Trace("Entering function GetShopProfile()")
-	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
+	defer log.Trace("Exiting function GetShopProfile()")
+
+	shopClaims, ok := c.Get("shop").(*entity.ShopJWT)
+
+	log.WithFields(log.Fields{
+		"shopClaims": shopClaims,
+	}).Debug("Shop claims from context")
+
 	if !ok {
 		err := errors.New("[Handler.GetShopProfile]: no shop claims found")
+
 		log.WithError(err).Error("Failed to get shop claims from context")
+
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: utils.StandardError(err),
 		})
 	}
 
 	log.WithField("shopName", shopClaims.Name).Debug("Attempting to retrieve shop profile")
+
 	shop, err := h.usecase.GetShopByName(shopClaims.Name)
 	if err != nil {
 		if err.Error() == "[ShopUsecase.GetShopByName]: shop not found" {
 			// If this happens, it means the shop name is not in the database
 			// the JWT secret is compromised or the shop is deleted
-			err = errors.Wrap(err, "[Handler.GetShopProfile]")
+			err = errors.Wrap(err, "[Handler.GetShopProfile]: shop not found")
+
 			log.WithFields(log.Fields{
 				"shopName": shopClaims.Name,
 			}).WithError(err).Warn("Shop not found")
+
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
 				Error: utils.StandardError(err),
 			})
 		}
-		err = errors.Wrap(err, "[Handler.GetShopProfile]: ")
+		err = errors.Wrap(err, "[Handler.GetShopProfile]: internal server error")
+
 		log.WithFields(log.Fields{
 			"shopName": shopClaims.Name,
 		}).WithError(err).Error("Internal server error while retrieving shop profile")
+
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
 			Error: utils.StandardError(err),
 		})
 	}
 
-	log.WithField("shopName", shopClaims.Name).Info("Shop profile retrieved successfully")
 	return c.JSON(http.StatusOK, entity.Response{
 		Success: true,
 		Message: "Shop profile retrieved successfully",
@@ -121,7 +134,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 		})
 	}
 
-	shop, ok := c.Get("shop").(*entity.ShopWithOutPassword)
+	shop, ok := c.Get("shop").(*entity.ShopJWT)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "[Handler.DeleteProduct]: no shop claims found",
@@ -169,7 +182,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		})
 	}
 
-	shop, ok := c.Get("shop").(*entity.ShopWithOutPassword)
+	shop, ok := c.Get("shop").(*entity.ShopJWT)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "[Handler.UpdateProduct]: no shop claims found",
@@ -221,7 +234,7 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 func (h *Handler) CreateProduct(c echo.Context) error {
-	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
+	shopClaims, ok := c.Get("shop").(*entity.ShopJWT)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "No shop claims found",
@@ -336,7 +349,7 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) ReadToken(c echo.Context) error {
-	shopClaims, ok := c.Get("shop").(*entity.ShopWithOutPassword)
+	shopClaims, ok := c.Get("shop").(*entity.ShopJWT)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
 			Error: "unauthorized",

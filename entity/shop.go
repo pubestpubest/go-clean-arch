@@ -14,6 +14,12 @@ type ShopWithOutPassword struct {
 	ID          uint32 `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type ShopJWT struct {
+	ID          uint32 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 	jwt.RegisteredClaims
 }
 
