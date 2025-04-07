@@ -77,6 +77,13 @@ func init() {
 		runEnv = "local"
 	}
 
+	// log.SetFormatter(joonix.NewFormatter())
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors:   true,
+		FullTimestamp: false,
+	})
+
 	utils.InitViper(runEnv)
 
 	// secret, err := utils.GetSecret(os.Getenv("PROJECT_ID"), os.Getenv("SECRET_ID"), os.Getenv("SECRET_VERSION"))
@@ -102,13 +109,6 @@ func main() {
 
 	// e.Use(echoMiddleware.Logger())
 	e.Use(echoMiddleware.Recover())
-
-	// log.SetFormatter(joonix.NewFormatter())
-	log.SetLevel(log.InfoLevel)
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: false,
-	})
 
 	log.Info("Starting server")
 
