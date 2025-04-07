@@ -106,7 +106,7 @@ func (h *Handler) GetProductsByShopID(c echo.Context) error {
 		log.WithError(err).Warn("Invalid shop ID format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -120,7 +120,7 @@ func (h *Handler) GetProductsByShopID(c echo.Context) error {
 			}).WithError(err).Warn("Shop not found")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		}
 		err = errors.Wrap(err, "[Handler.GetProductsByShopID]: internal server error")
@@ -130,7 +130,7 @@ func (h *Handler) GetProductsByShopID(c echo.Context) error {
 		}).WithError(err).Error("Internal server error while getting products")
 
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -150,7 +150,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 		log.WithError(err).Warn("Invalid product ID format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -161,7 +161,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 		log.Warn("No shop claims found in context")
 
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -180,7 +180,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 			}).WithError(err).Warn("Shop not found")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		case "[ShopUsecase.DeleteProduct]: product not found":
 			err = errors.Wrap(err, "[Handler.DeleteProduct]: product not found")
@@ -190,7 +190,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 			}).WithError(err).Warn("Product not found")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		case "[ShopUsecase.DeleteProduct]: product does not belong to shop":
 			err = errors.Wrap(err, "[Handler.DeleteProduct]: product does not belong to shop")
@@ -201,7 +201,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 			}).WithError(err).Warn("Product does not belong to shop")
 
 			return c.JSON(http.StatusForbidden, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		default:
 			err = errors.Wrap(err, "[Handler.DeleteProduct]: internal server error")
@@ -212,7 +212,7 @@ func (h *Handler) DeleteProduct(c echo.Context) error {
 			}).WithError(err).Error("Internal server error while deleting product")
 
 			return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		}
 	}
@@ -232,7 +232,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		log.WithError(err).Warn("Invalid product ID format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -243,7 +243,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		log.Warn("No shop claims found in context")
 
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -254,7 +254,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 		log.WithError(err).Warn("Invalid product data format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -273,7 +273,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 			}).WithError(err).Warn("Shop not found")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		case "[ShopUsecase.UpdateProduct]: product not found":
 			err = errors.Wrap(err, "[Handler.UpdateProduct]: product not found")
@@ -283,7 +283,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 			}).WithError(err).Warn("Product not found")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		case "[ShopUsecase.UpdateProduct]: product does not belong to shop":
 			err = errors.Wrap(err, "[Handler.UpdateProduct]: product does not belong to shop")
@@ -294,7 +294,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 			}).WithError(err).Warn("Product does not belong to shop")
 
 			return c.JSON(http.StatusForbidden, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		default:
 			err = errors.Wrap(err, "[Handler.UpdateProduct]: internal server error")
@@ -305,7 +305,7 @@ func (h *Handler) UpdateProduct(c echo.Context) error {
 			}).WithError(err).Error("Internal server error while updating product")
 
 			return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		}
 	}
@@ -329,7 +329,7 @@ func (h *Handler) CreateProduct(c echo.Context) error {
 		log.Warn("No shop claims found in context")
 
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -340,7 +340,7 @@ func (h *Handler) CreateProduct(c echo.Context) error {
 		log.WithError(err).Warn("Invalid product data format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -352,7 +352,7 @@ func (h *Handler) CreateProduct(c echo.Context) error {
 		}).WithError(err).Error("Internal server error while creating product")
 
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -372,7 +372,7 @@ func (h *Handler) GetAllShops(c echo.Context) error {
 			log.WithError(err).Warn("No shops found")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		}
 		err = errors.Wrap(err, "[Handler.GetAllShops]: internal server error")
@@ -380,7 +380,7 @@ func (h *Handler) GetAllShops(c echo.Context) error {
 		log.WithError(err).Error("Internal server error while getting all shops")
 
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 	return c.JSON(http.StatusOK, entity.Response{
@@ -399,7 +399,7 @@ func (h *Handler) CreateShop(c echo.Context) error {
 		log.WithError(err).Warn("Invalid shop data format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -409,11 +409,24 @@ func (h *Handler) CreateShop(c echo.Context) error {
 		log.Warn("Password is required")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
 	if err := h.usecase.CreateShop(req); err != nil {
+		// Check if the error message indicates a duplicate key
+		if err.Error() == "[ShopRepository.CreateShop]: shop already exists" {
+			err = errors.Wrap(err, "[Handler.CreateShop]: shop already exists")
+
+			log.WithFields(log.Fields{
+				"shopName": req.Name,
+			}).WithError(err).Warn("Shop already exists")
+
+			return c.JSON(http.StatusConflict, entity.ResponseError{
+				Error: utils.StandardError(err),
+			})
+		}
+
 		err = errors.Wrap(err, "[Handler.CreateShop]: internal server error")
 
 		log.WithFields(log.Fields{
@@ -421,7 +434,7 @@ func (h *Handler) CreateShop(c echo.Context) error {
 		}).WithError(err).Error("Internal server error while creating shop")
 
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -440,7 +453,7 @@ func (h *Handler) Login(c echo.Context) error {
 		log.WithError(err).Warn("Invalid login data format")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -450,7 +463,7 @@ func (h *Handler) Login(c echo.Context) error {
 		log.Warn("Name and password are required")
 
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -464,7 +477,7 @@ func (h *Handler) Login(c echo.Context) error {
 			}).WithError(err).Warn("Shop not found during login")
 
 			return c.JSON(http.StatusNotFound, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		}
 		if err.Error() == "[ShopUsecase.Login]: invalid password" {
@@ -475,7 +488,7 @@ func (h *Handler) Login(c echo.Context) error {
 			}).WithError(err).Warn("Invalid password during login")
 
 			return c.JSON(http.StatusUnauthorized, entity.ResponseError{
-				Error: err.Error(),
+				Error: utils.StandardError(err),
 			})
 		}
 		err = errors.Wrap(err, "[Handler.Login]: internal server error")
@@ -485,7 +498,7 @@ func (h *Handler) Login(c echo.Context) error {
 		}).WithError(err).Error("Internal server error during login")
 
 		return c.JSON(http.StatusInternalServerError, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 
@@ -501,12 +514,13 @@ func (h *Handler) Login(c echo.Context) error {
 func (h *Handler) ReadToken(c echo.Context) error {
 	shopClaims, ok := c.Get("shop").(*entity.ShopJWT)
 	if !ok {
-		err := errors.New("[Handler.ReadToken]: no shop claims found")
+		// It couldn't be 'no shop claims found' because the middleware would have handled it
+		err := errors.New("[Handler.ReadToken]: unexpected error in token validation")
 
-		log.Warn("No shop claims found in context")
+		log.WithError(err).Error("unexpected error in token validation")
 
 		return c.JSON(http.StatusUnauthorized, entity.ResponseError{
-			Error: err.Error(),
+			Error: utils.StandardError(err),
 		})
 	}
 

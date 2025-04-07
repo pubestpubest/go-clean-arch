@@ -40,7 +40,11 @@ func (r *shopRepository) CreateProduct(product entity.Product, shopID uint32) er
 	}).Debug("Creating product")
 
 	if err := r.db.Create(&product).Error; err != nil {
+
+		// Database error
+		// Table is altered or deleted
 		err = errors.Wrap(err, "[ShopRepository.CreateProduct]: failed to create product")
+
 		return err
 	}
 
@@ -61,12 +65,9 @@ func (r *shopRepository) CreateShop(shop entity.Shop) error {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			err = errors.New("[ShopRepository.CreateShop]: shop already exists")
 
-			log.WithFields(log.Fields{
-				"shop": shop,
-			}).WithError(err).Warn("shop already exists")
-
 			return err
 		}
+
 		err = errors.Wrap(err, "[ShopRepository.CreateShop]: failed to create shop")
 		return err
 	}

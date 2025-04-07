@@ -25,7 +25,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	// joonix "github.com/joonix/log"
-	"github.com/sirupsen/logrus"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -104,7 +104,7 @@ func main() {
 	e.Use(echoMiddleware.Recover())
 
 	// log.SetFormatter(joonix.NewFormatter())
-	log.SetLevel(log.TraceLevel)
+	log.SetLevel(log.InfoLevel)
 	log.SetFormatter(&log.TextFormatter{
 		ForceColors:   true,
 		FullTimestamp: false,
@@ -156,13 +156,13 @@ func connectDB() error {
 	var err error
 	log.Info("Connecting to database")
 	DB, err = gorm.Open(postgres.Open(connectionString), &gorm.Config{
+		TranslateError: true,
 		Logger: logger.New(
-			logrus.StandardLogger(),
+			log.StandardLogger(),
 			logger.Config{
 				SlowThreshold:             time.Second,
 				LogLevel:                  logger.Silent,
 				IgnoreRecordNotFoundError: true,
-				Colorful:                  false,
 			},
 		),
 	})

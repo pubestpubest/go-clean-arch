@@ -54,6 +54,9 @@ func (u *shopUsecase) CreateShop(shop entity.Shop) error {
 	shop.Password = string(hashedPassword)
 
 	if err := u.repo.CreateShop(shop); err != nil {
+		if err.Error() == "[ShopRepository.CreateShop]: shop already exists" {
+			return err
+		}
 		err = errors.Wrap(err, "[ShopUsecase.CreateShop]: failed to create shop")
 		return err
 	}
