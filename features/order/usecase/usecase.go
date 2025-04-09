@@ -77,7 +77,7 @@ func (u *OrderUsecase) GetAllOrders() ([]entity.Order, error) {
 	return orders, nil
 }
 
-func (u *OrderUsecase) GetOrder(orderID uint32) (entity.Order, error) {
+func (u *OrderUsecase) GetOrder(orderID uint32) (entity.OrderResponse, error) {
 	log.Trace("Entering function GetOrder()")
 	defer log.Trace("Exiting function GetOrder()")
 
@@ -88,12 +88,30 @@ func (u *OrderUsecase) GetOrder(orderID uint32) (entity.Order, error) {
 	order, err := u.orderRepo.GetOrder(orderID)
 	if err != nil {
 		err = errors.Wrap(err, "[OrderUsecase.GetOrder]: failed to get order by ID")
-		return entity.Order{}, err
+		return entity.OrderResponse{}, err
 	}
-	return order, nil
+
+	orderProducts := []entity.ProductWithOutShop{}
+	for _, product := range order.Products {
+		orderProducts = append(orderProducts, entity.ProductWithOutShop{
+			ID:          product.ID,
+			Name:        product.Name,
+			Price:       product.Price,
+			Description: product.Description,
+		})
+	}
+	orderResponse := entity.OrderResponse{
+		ID:       order.ID,
+		Status:   order.Status,
+		Total:    order.Total,
+		Courier:  order.Courier,
+		Products: orderProducts,
+	}
+
+	return orderResponse, nil
 }
 
-func (u *OrderUsecase) GetOrdersByUserID(userID uint32) ([]entity.Order, error) {
+func (u *OrderUsecase) GetOrdersByUserID(userID uint32) ([]entity.OrderResponse, error) {
 	log.Trace("Entering function GetOrdersByUserID()")
 	defer log.Trace("Exiting function GetOrdersByUserID()")
 
@@ -106,10 +124,20 @@ func (u *OrderUsecase) GetOrdersByUserID(userID uint32) ([]entity.Order, error) 
 		err = errors.Wrap(err, "[OrderUsecase.GetOrdersByUserID]: failed to get orders by user ID")
 		return nil, err
 	}
-	return orders, nil
+
+	ordersResponse := []entity.OrderResponse{}
+	for _, order := range orders {
+		ordersResponse = append(ordersResponse, entity.OrderResponse{
+			ID:      order.ID,
+			Status:  order.Status,
+			Total:   order.Total,
+			Courier: order.Courier,
+		})
+	}
+	return ordersResponse, nil
 }
 
-func (u *OrderUsecase) GetOrdersByShopID(shopID uint32) ([]entity.Order, error) {
+func (u *OrderUsecase) GetOrdersByShopID(shopID uint32) ([]entity.OrderResponse, error) {
 	log.Trace("Entering function GetOrdersByShopID()")
 	defer log.Trace("Exiting function GetOrdersByShopID()")
 
@@ -122,5 +150,15 @@ func (u *OrderUsecase) GetOrdersByShopID(shopID uint32) ([]entity.Order, error) 
 		err = errors.Wrap(err, "[OrderUsecase.GetOrdersByShopID]: failed to get orders by shop ID")
 		return nil, err
 	}
-	return orders, nil
+
+	ordersResponse := []entity.OrderResponse{}
+	for _, order := range orders {
+		ordersResponse = append(ordersResponse, entity.OrderResponse{
+			ID:      order.ID,
+			Status:  order.Status,
+			Total:   order.Total,
+			Courier: order.Courier,
+		})
+	}
+	return ordersResponse, nil
 }

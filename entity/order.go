@@ -38,3 +38,23 @@ type OrderProductRequest struct {
 	ProductId uint32 `json:"productId"`
 	Amount    uint32 `json:"amount"`
 }
+
+type OrderResponse struct {
+	ID       uint32               `json:"id"`
+	Status   Status               `json:"status"`
+	Total    float32              `json:"total"`
+	Courier  string               `json:"courier"`
+	Products []ProductWithOutShop `json:"products"`
+}
+
+type OrderInfo struct {
+	ID      uint32  `json:"id"`
+	Status  Status  `json:"status"`
+	Total   float32 `json:"total"`
+	Courier string  `json:"courier"`
+}
+
+type OrderProductInfo struct {
+	OrderInfo
+	Products []ProductWithOutShop `json:"products"`
+}

@@ -30,7 +30,7 @@ func (r *orderRepository) CreateOrder(order entity.Order) error {
 
 func (r *orderRepository) GetOrder(orderID uint32) (entity.Order, error) {
 	var order entity.Order
-	if err := r.db.Preload("OrderProducts.Product").Where("id = ?", orderID).First(&order).Error; err != nil {
+	if err := r.db.Preload("Products").Where("id = ?", orderID).First(&order).Error; err != nil {
 		err = errors.Wrap(err, "[OrderRepository.GetOrder]: failed to get order")
 		return entity.Order{}, err
 	}

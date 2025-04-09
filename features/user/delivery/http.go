@@ -33,9 +33,45 @@ func NewHandler(e *echo.Group, u domain.UserUsecase, o domain.OrderUsecase) *Han
 	authGroup := e.Group("")
 	authGroup.Use(middleware.UserAuth())
 	authGroup.PUT("/:id", h.UpdateUser)
-	// authGroup.GET("/orders", h.GetOrdersByUserID)
+	authGroup.GET("/orders", h.GetOrdersByUserID)
 	authGroup.POST("/orders", h.CreateOrder)
+	authGroup.GET("/orders/:id", h.GetOrder)
 	return &h
+}
+
+func (h *Handler) GetOrder(c echo.Context) error {
+	orderID := c.Param("id")
+	orderIDUint, err := strconv.ParseUint(orderID, 10, 32)
+	if err != nil {
+		err = errors.Wrap(err, "[Handler.GetOrder]: invalid order id")
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
+	}
+	order, err := h.orderUsecase.GetOrder(uint32(orderIDUint))
+	if err != nil {
+		err = errors.Wrap(err, "[Handler.GetOrder]: failed to get order")
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
+	}
+	return c.JSON(http.StatusOK, entity.Response{
+		Success: true,
+		Message: "Order fetched successfully",
+		Status:  http.StatusOK,
+		Data:    order,
+	})
+}
+
+func (h *Handler) GetOrdersByUserID(c echo.Context) error {
+	userID := c.Get("user").(*entity.UserJWT).ID
+	orders, err := h.orderUsecase.GetOrdersByUserID(userID)
+	if err != nil {
+		err = errors.Wrap(err, "[Handler.GetOrdersByUserID]: failed to get orders by user id")
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
+	}
+	return c.JSON(http.StatusOK, entity.Response{
+		Success: true,
+		Message: "Orders fetched successfully",
+		Status:  http.StatusOK,
+		Data:    orders,
+	})
 }
 
 func (h *Handler) CreateOrder(c echo.Context) error {
