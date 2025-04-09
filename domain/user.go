@@ -11,7 +11,8 @@ type UserUsecase interface {
 
 type UserRepository interface {
 	CreateUser(user entity.User) error
-	GetUserByID(id uint32) (entity.User, error)
+	GetUserByID(id uint32) (entity.UserWithOutPassword, error)
+	GetUserWithPasswordByEmail(email string) (entity.User, error)
 	UpdateUser(user entity.User) error
-	GetUserByEmail(email string) (entity.User, error)
+	GetUserByEmail(email string) (entity.UserWithOutPassword, error)
 }

@@ -68,6 +68,49 @@ func ShopAuth() echo.MiddlewareFunc {
 func UserAuth() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			bearerToken := c.Request().Header.Get("Authorization")
+			if bearerToken == "" {
+				err := errors.New("[Middleware.UserAuth]: no authorization header found")
+
+				log.WithError(err).Warn("Missing authorization header")
+
+				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
+					Error: utils.StandardError(err),
+				})
+			}
+
+			str := strings.Split(bearerToken, " ")
+			if len(str) != 2 {
+				err := errors.New("[Middleware.UserAuth]: invalid authorization header format")
+
+				log.WithError(err).Warn("Invalid authorization header format")
+
+				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
+					Error: utils.StandardError(err),
+				})
+			}
+
+			token := str[1]
+			claims, err := utils.ValidateJWT(token, []byte(viper.GetString("jwt.usersecret")))
+			if err != nil {
+				err := errors.New("[Middleware.UserAuth]: JWT validation failed")
+
+				log.WithError(err).Error("JWT validation failed")
+
+				return echo.NewHTTPError(http.StatusUnauthorized, entity.ResponseError{
+					Error: utils.StandardError(err),
+				})
+			}
+
+			// Convert MapClaims to UserWithOutPassword
+			userClaims := &entity.UserJWT{
+				ID:      uint32((*claims)["id"].(float64)),
+				Email:   (*claims)["email"].(string),
+				Address: (*claims)["address"].(string),
+			}
+
+			c.Set("user", userClaims)
+
 			return next(c)
 		}
 	}
