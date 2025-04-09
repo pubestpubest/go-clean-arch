@@ -6,6 +6,7 @@ import (
 
 type ProductUsecase interface {
 	GetAllProducts() ([]entity.ProductWithOutShop, error)
+	GetProductPrice(productID uint32) (float64, error)
 }
 
 type ProductRepository interface {
@@ -15,4 +16,5 @@ type ProductRepository interface {
 	GetProductByID(productID uint32) (entity.Product, error)
 	DeleteProduct(req *entity.ProductManagementRequest) error
 	GetAllProducts() ([]entity.ProductWithOutShop, error)
+	GetProductPrice(productID uint32) (float64, error)
 }

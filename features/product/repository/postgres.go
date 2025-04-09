@@ -16,6 +16,14 @@ func NewProductRepository(db *gorm.DB) domain.ProductRepository {
 	return &productRepository{db: db}
 }
 
+func (r *productRepository) GetProductPrice(productID uint32) (float64, error) {
+	var product entity.Product
+	if err := r.db.Where("id = ?", productID).First(&product).Error; err != nil {
+		return 0, errors.Wrap(err, "[ProductRepository.GetProductPrice]: failed to get product price")
+	}
+	return float64(product.Price), nil
+}
+
 func (r *productRepository) CreateProduct(product entity.Product, shopID uint32) error {
 	product.ShopID = shopID
 	if err := r.db.Create(&product).Error; err != nil {

@@ -26,32 +26,6 @@ func NewShopRepository(db *gorm.DB) domain.ShopRepository {
 // Focus to log on the failed case
 // Happy case is not that important
 
-// ✅
-// func (r *shopRepository) CreateProduct(product entity.Product, shopID uint32) error {
-
-// 	log.Trace("Entering function CreateProduct()")
-// 	defer log.Trace("Exiting function CreateProduct()")
-
-// 	product.ShopID = shopID
-
-// 	log.WithFields(log.Fields{
-// 		"product": product,
-// 		"shopID":  shopID,
-// 	}).Debug("Creating product")
-
-// 	if err := r.db.Create(&product).Error; err != nil {
-
-// 		// Database error
-// 		// Table is altered or deleted
-// 		err = errors.Wrap(err, "[ShopRepository.CreateProduct]: failed to create product")
-
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// ✅
 func (r *shopRepository) CreateShop(shop entity.Shop) error {
 
 	log.Trace("Entering function CreateShop()")

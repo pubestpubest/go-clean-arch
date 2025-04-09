@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"order-management/entity"
+	orderRepository "order-management/features/order/repository"
+	orderUsecase "order-management/features/order/usecase"
 	productDelivery "order-management/features/product/delivery"
 	productRepository "order-management/features/product/repository"
 	productUsecase "order-management/features/product/usecase"
@@ -70,6 +72,7 @@ func migrateDB() {
 		&entity.Order{},
 		&entity.Product{},
 		&entity.Shop{},
+		&entity.OrderProduct{},
 	)
 }
 
@@ -81,7 +84,7 @@ func init() {
 	}
 
 	// log.SetFormatter(joonix.NewFormatter())
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.TraceLevel)
 	log.SetFormatter(&log.TextFormatter{
 		ForceColors: true,
 	})
@@ -149,6 +152,10 @@ func main() {
 	userDelivery.NewHandler(userGroup,
 		userUsecase.NewUserUsecase(
 			userRepository.NewUserRepository(DB),
+		),
+		orderUsecase.NewOrderUsecase(
+			orderRepository.NewOrderRepository(DB),
+			productRepository.NewProductRepository(DB),
 		),
 	)
 

@@ -15,11 +15,15 @@ import (
 )
 
 type Handler struct {
-	usecase domain.UserUsecase
+	userUsecase  domain.UserUsecase
+	orderUsecase domain.OrderUsecase
 }
 
-func NewHandler(e *echo.Group, u domain.UserUsecase) *Handler {
-	h := Handler{usecase: u}
+func NewHandler(e *echo.Group, u domain.UserUsecase, o domain.OrderUsecase) *Handler {
+	h := Handler{
+		userUsecase:  u,
+		orderUsecase: o,
+	}
 
 	publicGroup := e.Group("")
 	publicGroup.POST("/register", h.CreateUser)
@@ -29,7 +33,42 @@ func NewHandler(e *echo.Group, u domain.UserUsecase) *Handler {
 	authGroup := e.Group("")
 	authGroup.Use(middleware.UserAuth())
 	authGroup.PUT("/:id", h.UpdateUser)
+	// authGroup.GET("/orders", h.GetOrdersByUserID)
+	authGroup.POST("/orders", h.CreateOrder)
 	return &h
+}
+
+func (h *Handler) CreateOrder(c echo.Context) error {
+	log.Trace("Entering function CreateOrder()")
+	defer log.Trace("Exiting function CreateOrder()")
+
+	req := entity.OrderRequest{}
+
+	if err := c.Bind(&req); err != nil {
+		err = errors.Wrap(err, "[Handler.CreateOrder]: invalid order data")
+
+		log.WithError(err).Warn("Invalid order data")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
+	}
+
+	userID := c.Get("user").(*entity.UserJWT).ID
+
+	if err := h.orderUsecase.CreateOrder(req, userID); err != nil {
+		err = errors.Wrap(err, "[Handler.CreateOrder]: internal server error")
+
+		log.WithFields(log.Fields{
+			"order": req,
+		}).WithError(err).Error("Internal server error during order creation")
+
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
+	}
+
+	return c.JSON(http.StatusOK, entity.Response{
+		Success: true,
+		Message: "Order created successfully",
+		Status:  http.StatusOK,
+	})
 }
 
 func (h *Handler) Login(c echo.Context) error {
@@ -51,7 +90,7 @@ func (h *Handler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 	//Login
-	user, err := h.usecase.Login(req.Email, req.Password)
+	user, err := h.userUsecase.Login(req.Email, req.Password)
 	if err != nil {
 		if err.Error() == "[UserUsecase.Login]: user not found" {
 			err = errors.Wrap(err, "[Handler.Login]: user not found")
@@ -107,7 +146,7 @@ func (h *Handler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
-	if err := h.usecase.CreateUser(req); err != nil {
+	if err := h.userUsecase.CreateUser(req); err != nil {
 		if err.Error() == "[UserUsecase.CreateUser]: user already exists" {
 			err = errors.Wrap(err, "[Handler.CreateUser]: user already exists")
 
@@ -143,7 +182,7 @@ func (h *Handler) GetUserByID(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
-	user, err := h.usecase.GetUserByID(uint32(id))
+	user, err := h.userUsecase.GetUserByID(uint32(id))
 	if err != nil {
 		err = errors.Wrap(err, "[Handler.GetUserByID]: internal server error")
 
@@ -167,7 +206,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
-	user, err := h.usecase.GetUserByID(uint32(id))
+	user, err := h.userUsecase.GetUserByID(uint32(id))
 	if err != nil {
 		if err.Error() == "[UserUsecase.GetUserByID]: user not found" {
 			err = errors.Wrap(err, "[Handler.UpdateUser]: user not found")
@@ -195,7 +234,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
-	if err := h.usecase.UpdateUser(user); err != nil {
+	if err := h.userUsecase.UpdateUser(user); err != nil {
 		err = errors.Wrap(err, "[Handler.UpdateUser]: internal server error")
 
 		log.WithFields(log.Fields{
