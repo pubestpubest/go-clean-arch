@@ -37,26 +37,25 @@ func (r *orderRepository) GetOrder(orderID uint32) (entity.Order, error) {
 	return order, nil
 }
 
-func (r *orderRepository) GetOrdersByUserID(userID uint32) ([]entity.Order, error) {
-	var orders []entity.Order
-	if err := r.db.Preload("OrderProducts.Product").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+func (r *orderRepository) GetOrdersByUserID(userID uint32) ([]uint32, error) {
+	var orderIDs []uint32
+	if err := r.db.Table("orders").Select("orders.id").Where("orders.user_id = ?", userID).Pluck("orders.id", &orderIDs).Error; err != nil {
 		err = errors.Wrap(err, "[OrderRepository.GetOrdersByUserID]: failed to get orders by user id")
 		return nil, err
 	}
-	return orders, nil
+	return orderIDs, nil
 }
 
-func (r *orderRepository) GetOrdersByShopID(shopID uint32) ([]entity.Order, error) {
-	var orders []entity.Order
-	if err := r.db.Joins("JOIN order_products op ON orders.id = op.order_id").
-		Joins("JOIN products p ON op.product_id = p.id").
-		Where("p.shop_id = ?", shopID).
-		Preload("OrderProducts.Product").
-		Find(&orders).Error; err != nil {
+func (r *orderRepository) GetOrdersByShopID(shopID uint32) ([]uint32, error) {
+	var orderIDs []uint32
+	if err := r.db.Table("orders").Select("orders.id").
+		Joins("JOIN order_products op ON orders.id = op.order_id").
+		Where("op.shop_id = ?", shopID).
+		Pluck("orders.id", &orderIDs).Error; err != nil {
 		err = errors.Wrap(err, "[OrderRepository.GetOrdersByShopID]: failed to get orders by shop id")
 		return nil, err
 	}
-	return orders, nil
+	return orderIDs, nil
 }
 
 func (r *orderRepository) UpdateOrder(order entity.Order) error {

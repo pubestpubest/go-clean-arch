@@ -17,6 +17,7 @@ import (
 	userDelivery "order-management/features/user/delivery"
 	userRepository "order-management/features/user/repository"
 	userUsecase "order-management/features/user/usecase"
+	"order-management/seeders"
 
 	"order-management/utils"
 	"os"
@@ -117,6 +118,12 @@ func main() {
 
 	log.Info("Starting server")
 
+	// Initialize seeder
+	seeder := seeders.NewSeeder(DB)
+	if err := seeder.Seed(); err != nil {
+		log.Warn("Failed to seed database:", err)
+	}
+
 	// Unauthenticated route
 	e.GET("/", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]interface{}{"success": true})
@@ -136,6 +143,10 @@ func main() {
 	shopDelivery.NewHandler(shopGroup,
 		shopUsecase.NewShopUsecase(
 			shopRepository.NewShopRepository(DB),
+			productRepository.NewProductRepository(DB),
+		),
+		orderUsecase.NewOrderUsecase(
+			orderRepository.NewOrderRepository(DB),
 			productRepository.NewProductRepository(DB),
 		),
 	)

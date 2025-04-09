@@ -119,21 +119,22 @@ func (u *OrderUsecase) GetOrdersByUserID(userID uint32) ([]entity.OrderResponse,
 		"userID": userID,
 	}).Debug("Getting orders by user ID")
 
-	orders, err := u.orderRepo.GetOrdersByUserID(userID)
+	orderIds, err := u.orderRepo.GetOrdersByUserID(userID)
 	if err != nil {
 		err = errors.Wrap(err, "[OrderUsecase.GetOrdersByUserID]: failed to get orders by user ID")
 		return nil, err
 	}
 
 	ordersResponse := []entity.OrderResponse{}
-	for _, order := range orders {
-		ordersResponse = append(ordersResponse, entity.OrderResponse{
-			ID:      order.ID,
-			Status:  order.Status,
-			Total:   order.Total,
-			Courier: order.Courier,
-		})
+	for _, orderID := range orderIds {
+		order, err := u.GetOrder(orderID)
+		if err != nil {
+			err = errors.Wrap(err, "[OrderUsecase.GetOrdersByUserID]: failed to get order by ID")
+			return nil, err
+		}
+		ordersResponse = append(ordersResponse, order)
 	}
+
 	return ordersResponse, nil
 }
 
@@ -145,20 +146,20 @@ func (u *OrderUsecase) GetOrdersByShopID(shopID uint32) ([]entity.OrderResponse,
 		"shopID": shopID,
 	}).Debug("Getting orders by shop ID")
 
-	orders, err := u.orderRepo.GetOrdersByShopID(shopID)
+	orderIds, err := u.orderRepo.GetOrdersByShopID(shopID)
 	if err != nil {
 		err = errors.Wrap(err, "[OrderUsecase.GetOrdersByShopID]: failed to get orders by shop ID")
 		return nil, err
 	}
 
 	ordersResponse := []entity.OrderResponse{}
-	for _, order := range orders {
-		ordersResponse = append(ordersResponse, entity.OrderResponse{
-			ID:      order.ID,
-			Status:  order.Status,
-			Total:   order.Total,
-			Courier: order.Courier,
-		})
+	for _, orderID := range orderIds {
+		order, err := u.GetOrder(orderID)
+		if err != nil {
+			err = errors.Wrap(err, "[OrderUsecase.GetOrdersByShopID]: failed to get order by ID")
+			return nil, err
+		}
+		ordersResponse = append(ordersResponse, order)
 	}
 	return ordersResponse, nil
 }

@@ -15,7 +15,7 @@ type OrderRepository interface {
 	UpdateOrder(order entity.Order) error
 	DeleteOrder(orderID uint32) error
 	GetOrder(orderID uint32) (entity.Order, error)
-	GetOrdersByUserID(userID uint32) ([]entity.Order, error)
-	GetOrdersByShopID(shopID uint32) ([]entity.Order, error)
+	GetOrdersByUserID(userID uint32) ([]uint32, error)
+	GetOrdersByShopID(shopID uint32) ([]uint32, error)
 	GetAllOrders() ([]entity.Order, error)
 }

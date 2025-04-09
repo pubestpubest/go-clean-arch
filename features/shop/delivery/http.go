@@ -17,10 +17,11 @@ import (
 )
 
 type Handler struct {
-	usecase domain.ShopUsecase
+	usecase      domain.ShopUsecase
+	orderUsecase domain.OrderUsecase
 }
 
-func NewHandler(e *echo.Group, u domain.ShopUsecase) *Handler {
+func NewHandler(e *echo.Group, u domain.ShopUsecase, o domain.OrderUsecase) *Handler {
 	h := Handler{usecase: u}
 	// Public group - no authentication required
 	publicGroup := e.Group("")
