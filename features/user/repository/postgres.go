@@ -25,7 +25,7 @@ func (r *userRepository) CreateUser(user entity.User) error {
 }
 
 func (r *userRepository) GetUserByID(id uint32) (user entity.UserWithOutPassword, err error) {
-	if err := r.db.First(&user, id).Error; err != nil {
+	if err := r.db.Model(&entity.User{}).Where("id = ?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = errors.New("[UserRepository.GetUserByID]: user not found")
 			return entity.UserWithOutPassword{}, err
@@ -60,6 +60,10 @@ func (r *userRepository) GetUserWithPasswordByEmail(email string) (user entity.U
 	return user, nil
 }
 
-func (r *userRepository) UpdateUser(user entity.User) error {
-	return r.db.Save(&user).Error
+func (r *userRepository) UpdateUser(user entity.UserWithOutPassword) error {
+	if err := r.db.Model(&entity.User{}).Where("id = ? AND email = ?", user.ID, user.Email).Updates(&user).Error; err != nil {
+		err = errors.Wrap(err, "[UserRepository.UpdateUser]: failed to update user")
+		return err
+	}
+	return nil
 }

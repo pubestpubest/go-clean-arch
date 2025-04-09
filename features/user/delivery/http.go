@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"order-management/domain"
 	"order-management/entity"
+	"order-management/utils"
 	"strconv"
 
 	"order-management/middleware"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Handler struct {
@@ -21,86 +21,137 @@ type Handler struct {
 func NewHandler(e *echo.Group, u domain.UserUsecase) *Handler {
 	h := Handler{usecase: u}
 
-	e.POST("/users", h.CreateUser)
-	e.GET("/users/:id", h.GetUserByID) //Should be used only by Shop
-	e.PUT("/users/:id", h.UpdateUser)
-
 	publicGroup := e.Group("")
-	publicGroup.POST("/users/register", h.CreateUser)
-	publicGroup.POST("/users/login", h.Login)
+	publicGroup.POST("/register", h.CreateUser)
+	publicGroup.POST("/login", h.Login)
+	publicGroup.GET("/:id", h.GetUserByID)
 
 	authGroup := e.Group("")
 	authGroup.Use(middleware.UserAuth())
-
+	authGroup.PUT("/:id", h.UpdateUser)
 	return &h
 }
 
 func (h *Handler) Login(c echo.Context) error {
 	//Bind
 	req := entity.User{}
-	err := c.Bind(&req)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+	if err := c.Bind(&req); err != nil {
+		err = errors.Wrap(err, "[Handler.Login]: failed to bind request")
+
+		log.WithError(err).Warn("Failed to bind request")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 	//Check if email and password are provided
 	if req.Email == "" || req.Password == "" {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: "email and password are required"})
+		err := errors.New("[Handler.Login]: email and password are required")
+
+		log.Warn("Email and password are required")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 	//Login
 	user, err := h.usecase.Login(req.Email, req.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+		if err.Error() == "[UserUsecase.Login]: user not found" {
+			err = errors.Wrap(err, "[Handler.Login]: user not found")
+
+			log.WithFields(log.Fields{
+				"email": req.Email,
+			}).WithError(err).Warn("User not found during login")
+
+			return c.JSON(http.StatusNotFound, entity.ResponseError{Error: utils.StandardError(err)})
+		}
+		if err.Error() == "[UserUsecase.Login]: invalid password" {
+			err = errors.Wrap(err, "[Handler.Login]: invalid password")
+
+			log.WithFields(log.Fields{
+				"email": req.Email,
+			}).WithError(err).Warn("Invalid password during login")
+
+			return c.JSON(http.StatusUnauthorized, entity.ResponseError{Error: utils.StandardError(err)})
+		}
+		err = errors.Wrap(err, "[Handler.Login]: internal server error")
+
+		log.WithFields(log.Fields{
+			"email": req.Email,
+		}).WithError(err).Error("Internal server error during login")
+
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
 	}
-	//Check if password is correct
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return c.JSON(http.StatusUnauthorized, entity.ResponseError{Error: "invalid password"})
-	}
-	//Create token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":    user.ID,
-		"email": user.Email,
+
+	c.Response().Header().Set("Authorization", "Bearer "+user)
+
+	return c.JSON(http.StatusOK, entity.Response{
+		Success: true,
+		Message: "Login successful",
+		Status:  http.StatusOK,
 	})
-	t, err := token.SignedString([]byte(viper.GetString("jwt.secret")))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
-	}
-	//Set cookie
-	cookie := &http.Cookie{
-		Name:  "token",
-		Value: t,
-		Path:  "/",
-	}
-	c.SetCookie(cookie)
-	//Return user
-	return c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) CreateUser(c echo.Context) error {
 	req := entity.User{}
-	err := c.Bind(&req)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+
+	if err := c.Bind(&req); err != nil {
+		err = errors.Wrap(err, "[Handler.CreateUser]: invalid user data")
+
+		log.WithError(err).Warn("Invalid user data")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 	if req.Email == "" || req.Password == "" {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: "email and password are required"})
+		err := errors.New("[Handler.CreateUser]: email and password are required")
+
+		log.Warn("Email and password are required")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
 	if err := h.usecase.CreateUser(req); err != nil {
-		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+		if err.Error() == "[UserUsecase.CreateUser]: user already exists" {
+			err = errors.Wrap(err, "[Handler.CreateUser]: user already exists")
+
+			log.WithFields(log.Fields{
+				"email": req.Email,
+			}).WithError(err).Warn("User already exists during creation")
+
+			return c.JSON(http.StatusConflict, entity.ResponseError{Error: utils.StandardError(err)})
+		}
+		err = errors.Wrap(err, "[Handler.CreateUser]: internal server error")
+
+		log.WithFields(log.Fields{
+			"email": req.Email,
+		}).WithError(err).Error("Internal server error during user creation")
+
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
-	return c.NoContent(http.StatusOK)
+	return c.JSON(http.StatusOK, entity.Response{
+		Success: true,
+		Message: "User created successfully",
+		Status:  http.StatusOK,
+	})
 }
 
 func (h *Handler) GetUserByID(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+		err = errors.Wrap(err, "[Handler.GetUserByID]: invalid user id")
+
+		log.WithError(err).Warn("Invalid user id")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
 	user, err := h.usecase.GetUserByID(uint32(id))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+		err = errors.Wrap(err, "[Handler.GetUserByID]: internal server error")
+
+		log.WithFields(log.Fields{
+			"user_id": id,
+		}).WithError(err).Error("Internal server error during user retrieval")
+
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -109,20 +160,54 @@ func (h *Handler) GetUserByID(c echo.Context) error {
 func (h *Handler) UpdateUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+		err = errors.Wrap(err, "[Handler.UpdateUser]: invalid user id")
+
+		log.WithError(err).Warn("Invalid user id")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
 	user, err := h.usecase.GetUserByID(uint32(id))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+		if err.Error() == "[UserUsecase.GetUserByID]: user not found" {
+			err = errors.Wrap(err, "[Handler.UpdateUser]: user not found")
+
+			log.WithFields(log.Fields{
+				"user_id": id,
+			}).WithError(err).Warn("User not found during user retrieval")
+
+			return c.JSON(http.StatusNotFound, entity.ResponseError{Error: utils.StandardError(err)})
+		}
+		err = errors.Wrap(err, "[Handler.UpdateUser]: internal server error")
+
+		log.WithFields(log.Fields{
+			"user_id": id,
+		}).WithError(err).Error("Internal server error during user retrieval")
+
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: err.Error()})
+		err = errors.Wrap(err, "[Handler.UpdateUser]: invalid user data")
+
+		log.WithError(err).Warn("Invalid user data")
+
+		return c.JSON(http.StatusBadRequest, entity.ResponseError{Error: utils.StandardError(err)})
 	}
 
 	if err := h.usecase.UpdateUser(user); err != nil {
-		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: err.Error()})
+		err = errors.Wrap(err, "[Handler.UpdateUser]: internal server error")
+
+		log.WithFields(log.Fields{
+			"user_id": id,
+		}).WithError(err).Error("Internal server error during user update")
+
+		return c.JSON(http.StatusInternalServerError, entity.ResponseError{Error: utils.StandardError(err)})
 	}
-	return c.JSON(http.StatusOK, user)
+
+	return c.JSON(http.StatusOK, entity.Response{
+		Success: true,
+		Message: "User updated successfully",
+		Status:  http.StatusOK,
+	})
 }
