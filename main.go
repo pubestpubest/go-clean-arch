@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"order-management/entity"
@@ -23,6 +22,11 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	// joonix "github.com/joonix/log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var runEnv string
@@ -46,6 +50,8 @@ func serveGracefulShutdown(e *echo.Echo) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+
+	log.Info("Server shutting down")
 
 	gracefulShutdownTimeout := 30 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
@@ -71,6 +77,13 @@ func init() {
 		runEnv = "local"
 	}
 
+	// log.SetFormatter(joonix.NewFormatter())
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors:   true,
+		FullTimestamp: false,
+	})
+
 	utils.InitViper(runEnv)
 
 	// secret, err := utils.GetSecret(os.Getenv("PROJECT_ID"), os.Getenv("SECRET_ID"), os.Getenv("SECRET_VERSION"))
@@ -94,8 +107,10 @@ func init() {
 func main() {
 	e := echo.New()
 
-	e.Use(echoMiddleware.Logger())
+	// e.Use(echoMiddleware.Logger())
 	e.Use(echoMiddleware.Recover())
+
+	log.Info("Starting server")
 
 	// Unauthenticated route
 	e.GET("/", func(c echo.Context) error {
@@ -139,9 +154,26 @@ func connectDB() error {
 		utils.ViperGetString("postgres.port"))
 
 	var err error
-	DB, err = gorm.Open(postgres.Open(connectionString), &gorm.Config{})
+	log.Info("Connecting to database")
+	DB, err = gorm.Open(postgres.Open(connectionString), &gorm.Config{
+		TranslateError: true,
+		Logger: logger.New(
+			log.StandardLogger(),
+			logger.Config{
+				SlowThreshold:             time.Second,
+				LogLevel:                  logger.Silent,
+				IgnoreRecordNotFoundError: true,
+			},
+		),
+	})
+
+	if err != nil {
+		log.Error("Failed to connect to database")
+		return err
+	}
 
 	migrateDB()
 
+	defer log.Info("Database connected")
 	return err
 }
