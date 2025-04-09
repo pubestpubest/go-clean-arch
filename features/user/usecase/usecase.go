@@ -6,6 +6,7 @@ import (
 	"order-management/utils"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,6 +20,13 @@ func NewUserUsecase(userRepository domain.UserRepository) domain.UserUsecase {
 }
 
 func (u *userUsecase) CreateUser(user entity.User) error {
+	log.Trace("Entering function CreateUser()")
+	defer log.Trace("Exiting function CreateUser()")
+
+	log.WithFields(log.Fields{
+		"user": user,
+	}).Debug("Creating user")
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		err = errors.Wrap(err, "[UserUsecase.CreateUser]: failed to hash password")
@@ -38,6 +46,13 @@ func (u *userUsecase) CreateUser(user entity.User) error {
 }
 
 func (u *userUsecase) UpdateUser(user entity.UserWithOutPassword) error {
+	log.Trace("Entering function UpdateUser()")
+	defer log.Trace("Exiting function UpdateUser()")
+
+	log.WithFields(log.Fields{
+		"user": user,
+	}).Debug("Updating user")
+
 	if err := u.repo.UpdateUser(user); err != nil {
 		err = errors.Wrap(err, "[UserUsecase.UpdateUser]: failed to update user")
 		return err
@@ -46,6 +61,14 @@ func (u *userUsecase) UpdateUser(user entity.UserWithOutPassword) error {
 }
 
 func (u *userUsecase) Login(email string, password string) (string, error) {
+	log.Trace("Entering function Login()")
+	defer log.Trace("Exiting function Login()")
+
+	log.WithFields(log.Fields{
+		"email":    email,
+		"password": password,
+	}).Debug("Logging in user")
+
 	credentials, err := u.repo.GetUserWithPasswordByEmail(email)
 	if err != nil {
 		if err.Error() == "[UserRepository.GetUserWithPasswordByEmail]: user not found" {
@@ -75,6 +98,13 @@ func (u *userUsecase) Login(email string, password string) (string, error) {
 	return t, nil
 }
 func (u *userUsecase) GetUserByID(id uint32) (entity.UserWithOutPassword, error) {
+	log.Trace("Entering function GetUserByID()")
+	defer log.Trace("Exiting function GetUserByID()")
+
+	log.WithFields(log.Fields{
+		"id": id,
+	}).Debug("Getting user by id")
+
 	user, err := u.repo.GetUserByID(id)
 	if err != nil {
 		err = errors.Wrap(err, "[UserUsecase.GetUserByID]: failed to get user by id")

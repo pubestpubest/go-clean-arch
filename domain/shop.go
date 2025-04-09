@@ -17,14 +17,9 @@ type ShopUsecase interface {
 }
 
 type ShopRepository interface {
-	CreateProduct(product entity.Product, shopID uint32) error
 	CreateShop(shop entity.Shop) error
 	GetAllShops() ([]entity.Shop, error)
-	GetProductsByShopID(shopID uint32) ([]entity.Product, error)
 	GetShopByName(name string) (entity.ShopWithOutPassword, error)
-	UpdateProduct(req *entity.ProductManagementRequest, product *entity.Product) error
-	GetProductByID(productID uint32) (entity.Product, error)
-	DeleteProduct(req *entity.ProductManagementRequest) error
 	GetShopByNameWithPassword(name string) (entity.Shop, error)
 	ShopExists(id uint32) (bool, error)
 }

@@ -16,3 +16,8 @@ type ProductWithOutShop struct {
 	Description string `json:"description"`
 	Price       uint32 `json:"price"`
 }
+
+type ProductManagementRequest struct {
+	ShopID    uint32 `json:"shop_id"`
+	ProductID uint32 `json:"product_id"`
+}

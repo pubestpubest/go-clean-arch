@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"order-management/entity"
+	productDelivery "order-management/features/product/delivery"
+	productRepository "order-management/features/product/repository"
+	productUsecase "order-management/features/product/usecase"
 	shopDelivery "order-management/features/shop/delivery"
 	shopRepository "order-management/features/shop/repository"
 	shopUsecase "order-management/features/shop/usecase"
@@ -80,8 +83,7 @@ func init() {
 	// log.SetFormatter(joonix.NewFormatter())
 	log.SetLevel(log.InfoLevel)
 	log.SetFormatter(&log.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: false,
+		ForceColors: true,
 	})
 
 	utils.InitViper(runEnv)
@@ -128,17 +130,25 @@ func main() {
 
 	shopGroup := e.Group("/shops")
 
-	userGroup := e.Group("/users")
-
-	userDelivery.NewHandler(userGroup,
-		userUsecase.NewUserUsecase(
-			userRepository.NewUserRepository(DB),
-		),
-	)
-
 	shopDelivery.NewHandler(shopGroup,
 		shopUsecase.NewShopUsecase(
 			shopRepository.NewShopRepository(DB),
+			productRepository.NewProductRepository(DB),
+		),
+	)
+
+	productGroup := e.Group("/products")
+
+	productDelivery.NewHandler(productGroup,
+		productUsecase.NewProductUsecase(
+			productRepository.NewProductRepository(DB),
+		),
+	)
+
+	userGroup := e.Group("/users")
+	userDelivery.NewHandler(userGroup,
+		userUsecase.NewUserUsecase(
+			userRepository.NewUserRepository(DB),
 		),
 	)
 
