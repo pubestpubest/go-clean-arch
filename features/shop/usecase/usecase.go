@@ -86,9 +86,9 @@ func (u *shopUsecase) GetAllShopsWithProducts() ([]entity.ShopWithProducts, erro
 			err = errors.Wrap(err, "[ShopUsecase.GetAllShopsWithProducts]: failed to get products by shop id")
 			return nil, err
 		}
-		productsResponse := []entity.ProductResponse{}
+		productsResponse := []entity.ProductWithOutShop{}
 		for _, product := range products {
-			productsResponse = append(productsResponse, entity.ProductResponse{
+			productsResponse = append(productsResponse, entity.ProductWithOutShop{
 				ID:          product.ID,
 				Name:        product.Name,
 				Description: product.Description,
@@ -154,9 +154,9 @@ func (u *shopUsecase) GetShopByName(name string) (entity.ShopWithProducts, error
 		return entity.ShopWithProducts{}, err
 	}
 
-	productsResponse := []entity.ProductResponse{}
+	productsResponse := []entity.ProductWithOutShop{}
 	for _, product := range products {
-		productsResponse = append(productsResponse, entity.ProductResponse{
+		productsResponse = append(productsResponse, entity.ProductWithOutShop{
 			ID:          product.ID,
 			Name:        product.Name,
 			Description: product.Description,

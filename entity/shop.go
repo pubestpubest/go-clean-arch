@@ -24,8 +24,8 @@ type ShopJWT struct {
 }
 
 type ShopWithProducts struct {
-	ID          uint32            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Products    []ProductResponse `json:"products"`
+	ID          uint32               `json:"id"`
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	Products    []ProductWithOutShop `json:"products"`
 }

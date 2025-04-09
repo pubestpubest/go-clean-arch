@@ -10,7 +10,7 @@ type Product struct {
 	Orders      []Order `gorm:"many2many:order_products;"`
 }
 
-type ProductResponse struct {
+type ProductWithOutShop struct {
 	ID          uint32 `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
