@@ -5,7 +5,8 @@ set -e
 mkdir -p config
 
 # Write the config file
-echo "$CONFIG_YML" > config/config.yml
+echo "$CONFIG_YML" > configs/config.yaml
+echo "$CONFIG_YML" > configs/config.local.yaml
 
 # Run the Go binary
 ./order-management
