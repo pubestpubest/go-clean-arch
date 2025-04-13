@@ -113,7 +113,13 @@ func init() {
 func main() {
 	e := echo.New()
 
-	// e.Use(echoMiddleware.Logger())
+	// Configure CORS
+	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
+
 	e.Use(echoMiddleware.Recover())
 
 	log.Info("Starting server")
