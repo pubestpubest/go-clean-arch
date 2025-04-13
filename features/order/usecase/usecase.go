@@ -91,13 +91,19 @@ func (u *OrderUsecase) GetOrder(orderID uint32) (entity.OrderResponse, error) {
 		return entity.OrderResponse{}, err
 	}
 
-	orderProducts := []entity.ProductWithOutShop{}
+	orderProducts := []entity.ProductOrderAmount{}
 	for _, product := range order.Products {
-		orderProducts = append(orderProducts, entity.ProductWithOutShop{
+		amount, err := u.orderRepo.GetProductOrderAmount(orderID, product.ID)
+		if err != nil {
+			err = errors.Wrap(err, "[OrderUsecase.GetOrder]: failed to get product order amount")
+			return entity.OrderResponse{}, err
+		}
+		orderProducts = append(orderProducts, entity.ProductOrderAmount{
 			ID:          product.ID,
 			Name:        product.Name,
 			Price:       product.Price,
 			Description: product.Description,
+			Amount:      amount,
 		})
 	}
 	orderResponse := entity.OrderResponse{

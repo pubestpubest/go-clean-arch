@@ -18,4 +18,5 @@ type OrderRepository interface {
 	GetOrdersByUserID(userID uint32) ([]uint32, error)
 	GetOrdersByShopID(shopID uint32) ([]uint32, error)
 	GetAllOrders() ([]entity.Order, error)
+	GetProductOrderAmount(orderID uint32, productID uint32) (uint32, error)
 }

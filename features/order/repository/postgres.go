@@ -108,3 +108,11 @@ func (r *orderRepository) GetAllOrders() ([]entity.Order, error) {
 	}
 	return orders, nil
 }
+
+func (r *orderRepository) GetProductOrderAmount(orderID uint32, productID uint32) (uint32, error) {
+	var amount uint32
+	if err := r.db.Table("order_products").Where("order_id = ? AND product_id = ?", orderID, productID).Pluck("amount", &amount).Error; err != nil {
+		return 0, errors.Wrap(err, "[OrderRepository.GetProductOrderAmount]: failed to get product order amount")
+	}
+	return amount, nil
+}

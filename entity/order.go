@@ -44,7 +44,7 @@ type OrderResponse struct {
 	Status   Status               `json:"status"`
 	Total    float32              `json:"total"`
 	Courier  string               `json:"courier"`
-	Products []ProductWithOutShop `json:"products"`
+	Products []ProductOrderAmount `json:"products"`
 }
 
 type OrderInfo struct {
