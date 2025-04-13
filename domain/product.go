@@ -7,6 +7,7 @@ import (
 type ProductUsecase interface {
 	GetAllProducts() ([]entity.ProductWithOutShop, error)
 	GetProductPrice(productID uint32) (float64, error)
+	GetProductByID(productID uint32) (entity.Product, error)
 }
 
 type ProductRepository interface {

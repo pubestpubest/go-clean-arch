@@ -50,10 +50,11 @@ func (r *productRepository) UpdateProduct(req *entity.ProductManagementRequest, 
 }
 
 func (r *productRepository) GetProductByID(productID uint32) (product entity.Product, err error) {
-	if err := r.db.First(&product, productID).Error; err != nil {
+	if err := r.db.Preload("Shop").First(&product, productID).Error; err != nil {
 		err = errors.Wrap(err, "[ProductRepository.GetProductByID]: failed to get product by id")
 		return entity.Product{}, err
 	}
+	product.Shop.Password = ""
 	return product, nil
 }
 
