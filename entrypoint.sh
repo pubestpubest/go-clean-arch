@@ -2,7 +2,7 @@
 set -e
 
 # Make sure the config directory exists
-mkdir -p config
+mkdir -p configs
 
 # Write the config file
 echo "$CONFIG_YML" > configs/config.yaml
